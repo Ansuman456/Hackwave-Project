@@ -1,0 +1,61 @@
+# Dependencies
+node_modules/
+vendor/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Build output
+dist/
+build/
+out/
+target/
+
+# Logs
+*.log
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE / editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.cache
+
+# Test / coverage
+coverage/
+.nyc_output/
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+ENV/
+
+# Java
+*.class
+*.jar
+target/
+
+# Local configuration
+*.local
+
+# Database
+*.sqlite
+*.sqlite3
+
+# Generated files
+*.generated.*
