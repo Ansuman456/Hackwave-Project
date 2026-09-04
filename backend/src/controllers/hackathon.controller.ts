@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { v4 as uuidv4 } from "uuid";
 import { StrategistInputSchema, createInitialState, HackathonState } from "../graph/state";
+import { extractTextFromPdf } from "../utils/pdfParser";
 import { HackathonProject } from "../models/HackathonProject.model";
 import { hackforgeGraph, resumeAfterCandidateSelection, resumeAfterTechStackSelection } from "../graph/hackforgeGraph";
 import { registerSSEConnection } from "../utils/sseStreamer";
@@ -20,7 +21,59 @@ function getProjectId(req: Request): string {
 
 export async function createHackathon(req: Request, res: Response): Promise<void> {
   try {
-    const input = StrategistInputSchema.parse(req.body);
+    const files = (req.files as Express.Multer.File[] | undefined) || [];
+    const isMultipart = files.length > 0 || !!req.is("multipart/form-data");
+
+    let problemStatement: string;
+    let resumes: string[];
+    let hackathon: unknown;
+    let githubLinks: unknown;
+    let userConstraints: unknown;
+    let teamSize: number | undefined;
+
+    if (isMultipart) {
+      // Multipart upload: resumes come as PDF files that must be parsed to text.
+      resumes = [];
+      for (const file of files) {
+        resumes.push(await extractTextFromPdf(file.buffer));
+      }
+
+      problemStatement =
+        typeof req.body.problemStatement === "string"
+          ? req.body.problemStatement.trim()
+          : "";
+
+      const rawTeamSize = req.body.teamSize;
+      teamSize =
+        rawTeamSize === undefined || rawTeamSize === ""
+          ? undefined
+          : Number(rawTeamSize);
+
+      hackathon = parseJsonField(req.body.hackathon, "hackathon");
+      githubLinks = parseJsonField(req.body.githubLinks, "githubLinks");
+      userConstraints = parseJsonField(
+        req.body.userConstraints,
+        "userConstraints"
+      );
+    } else {
+      // JSON body: resumes are already plain text strings.
+      problemStatement = req.body.problemStatement;
+      resumes = (req.body.resumes as string[] | undefined) || [];
+      hackathon = req.body.hackathon;
+      githubLinks = req.body.githubLinks;
+      userConstraints = req.body.userConstraints;
+      teamSize = req.body.teamSize;
+    }
+
+    const input = StrategistInputSchema.parse({
+      problemStatement,
+      resumes,
+      githubLinks,
+      hackathon,
+      userConstraints,
+      teamSize,
+    });
+
     const projectId = uuidv4();
 
     const project = await HackathonProject.create({
@@ -39,16 +92,39 @@ export async function createHackathon(req: Request, res: Response): Promise<void
       data: {
         projectId: project.projectId,
         status: project.status,
+        parsedResumeCount: resumes.length,
         createdAt: project.createdAt,
       },
     });
   } catch (error) {
     if (error instanceof Error && error.name === "ZodError") {
-      res.status(400).json({ success: false, error: "Invalid input", details: error.message });
+      res.status(400).json({
+        success: false,
+        error: "Invalid input",
+        details: error.message,
+      });
+      return;
+    }
+    if (error instanceof Error) {
+      res.status(400).json({ success: false, error: error.message });
       return;
     }
     res.status(500).json({ success: false, error: "Internal server error" });
   }
+}
+
+function parseJsonField(value: unknown, fieldName: string): unknown {
+  if (value === undefined || value === null || value === "") {
+    return undefined;
+  }
+  if (typeof value === "string") {
+    try {
+      return JSON.parse(value);
+    } catch {
+      throw new Error(`Field "${fieldName}" must be valid JSON.`);
+    }
+  }
+  return value;
 }
 
 export async function getHackathonStatus(req: Request, res: Response): Promise<void> {

@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { uploadResumes } from "../middleware/upload.middleware";
 import {
   createHackathon,
   getHackathonStatus,
@@ -15,7 +16,7 @@ import {
 
 const router = Router();
 
-router.post("/hackathons", createHackathon);
+router.post("/hackathons", uploadResumes, createHackathon);
 router.get("/hackathons/:id/status", getHackathonStatus);
 router.post("/hackathons/:id/start", startHackathon);
 router.get("/hackathons/:id/events", streamEvents);
