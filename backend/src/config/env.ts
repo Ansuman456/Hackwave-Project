@@ -10,11 +10,14 @@ const envSchema = z.object({
   PORT: z.coerce.number().default(5000),
   MONGODB_URI: z.string().default("mongodb://localhost:27017/hackforge"),
   GEMINI_API_KEY: z.string().default(""),
-  GEMINI_MODEL: z.string().default("gemini-flash-lite-latest"),
+  GEMINI_MODEL: z.string().default("gemini-3.6-flash"),
   GROQ_API_KEY: z.string().optional().default(""),
   GROQ_MODEL: z.string().optional().default("openai/gpt-oss-20b"),
   TAVILY_API_KEY: z.string().default(""),
   GITHUB_TOKEN: z.string().default(""),
+  DEEPSEEK_API_KEY: z.string().default(""),
+  DEEPSEEK_BASE_URL: z.string().default("https://api.deepseek.com/v1"),
+  DEEPSEEK_MODEL: z.string().default("deepseek-chat"),
   VECTOR_DB_PROVIDER: z.string().optional().default("mongodb"),
   VECTOR_DB_URL: z.string().optional().default(""),
   VECTOR_DB_API_KEY: z.string().optional().default(""),
@@ -48,6 +51,8 @@ export function validateEnv(): void {
   console.log(`[ENV] GEMINI_API_KEY=${config.GEMINI_API_KEY ? "SET" : "NOT SET"}`);
   console.log(`[ENV] TAVILY_API_KEY=${config.TAVILY_API_KEY ? "SET" : "NOT SET"}`);
   console.log(`[ENV] GITHUB_TOKEN=${config.GITHUB_TOKEN ? "SET" : "NOT SET"}`);
+  console.log(`[ENV] DEEPSEEK_API_KEY=${config.DEEPSEEK_API_KEY ? "SET" : "NOT SET"}`);
+  console.log(`[ENV] DEEPSEEK_MODEL=${config.DEEPSEEK_MODEL}`);
   console.log(`[ENV] JWT_SECRET=${config.JWT_SECRET ? "SET" : "NOT SET"}`);
   console.log(`[ENV] EMAIL_USER=${config.EMAIL_USER ? "SET" : "NOT SET"}`);
 }

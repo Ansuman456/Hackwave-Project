@@ -1,0 +1,743 @@
+You are the senior backend engineer responsible for implementing the HackForge multi-agent AI system.
+
+IMPORTANT:
+Do NOT start coding immediately.
+
+Your first responsibility is to completely understand the existing project requirements and implementation plan. You must inspect the relevant files before making ANY architectural or implementation decision.
+
+==================================================
+1. PROJECT CONTEXT
+==================================================
+
+This project is a multi-agent AI system for the SNIST Hackathon.
+
+The system will eventually contain multiple specialized agents that work together.
+
+The FIRST agent that you must implement is:
+
+AGENT 1 — STRATEGIST
+
+Do NOT implement Agent 2, Agent 3, or the remaining agents yet unless absolutely required as a shared infrastructure dependency.
+
+The goal of this task is:
+
+1. Understand the complete system architecture.
+2. Understand exactly what Agent 1 — Strategist is responsible for.
+3. Set up the backend infrastructure.
+4. Implement Agent 1 completely.
+5. Make Agent 1 independently functional and testable.
+6. Follow the existing implementation plan exactly.
+7. Prepare the architecture so future agents can be added cleanly.
+
+==================================================
+2. READ THE REQUIREMENTS FIRST
+==================================================
+
+Before writing code, inspect the entire:
+
+requirements/
+
+folder.
+
+Read ALL files inside it.
+
+Do not only read the files related to Agent 1.
+
+You need the complete context because Agent 1's output will eventually be consumed by other agents.
+
+Understand:
+
+- overall problem statement
+- expected system behavior
+- all agents
+- responsibilities of every agent
+- inputs and outputs
+- data flow
+- tools
+- third-party services
+- database requirements
+- vector database requirements
+- LLM requirements
+- expected JSON structures
+- inter-agent communication
+- error handling
+- project constraints
+- hackathon-specific requirements
+
+After reading the requirements, identify the exact requirements relevant to Agent 1.
+
+==================================================
+3. IMPLEMENTATION PLAN IS THE SOURCE OF TRUTH
+==================================================
+
+After reading the requirements folder, READ:
+
+implementation_plan.md
+
+This file is extremely important.
+
+Treat implementation_plan.md as the primary implementation roadmap.
+
+Do not invent a different architecture if the implementation plan already specifies one.
+
+Understand:
+
+- project structure
+- backend architecture
+- agent architecture
+- LangChain usage
+- LangGraph usage
+- API architecture
+- database architecture
+- vector database architecture
+- tool architecture
+- LLM integration
+- agent state
+- agent communication
+- dependencies
+- execution order
+- testing strategy
+- environment variables
+- future agent integration
+
+Also inspect:
+
+implementation_plan2.md.resolved
+
+if it exists and is relevant.
+
+Compare it against implementation_plan.md.
+
+If there are differences, determine which version is marked as resolved/final and follow the resolved implementation.
+
+Do not blindly overwrite or ignore existing decisions.
+
+==================================================
+4. UNDERSTAND ALL AGENTS BEFORE IMPLEMENTING AGENT 1
+==================================================
+
+Even though you are implementing only Agent 1, understand the responsibilities of:
+
+- Agent 1 — Strategist
+- Agent 2 — Researcher
+- Agent 3 — Innovation Agent
+- remaining agents defined by the requirements
+
+You must understand how Agent 1 fits into the complete pipeline.
+
+Specifically determine:
+
+- What input does Strategist receive?
+- Who provides that input?
+- What context does Strategist need?
+- What reasoning is Strategist expected to perform?
+- What tools does Strategist use?
+- What should Strategist output?
+- What exact format should the output have?
+- Which future agents consume Strategist's output?
+- What information must be preserved for downstream agents?
+- What information must NOT be fabricated?
+- How should uncertainty be handled?
+
+Do not implement a simplistic chatbot.
+
+Agent 1 must behave as a specialized Strategist agent
+
+==================================================
+5. AGENT 1 — STRATEGIST
+==================================================
+
+Agent 1 is the first agent in the system.
+
+Its job is to analyze the user's problem/project requirements and create a structured strategic plan that can be consumed by downstream agents.
+
+The Strategist should:
+
+- understand the user's problem
+- identify the core problem
+- identify the target users
+- understand constraints
+- identify objectives
+- identify important requirements
+- identify assumptions
+- identify risks
+- identify opportunities
+- break the problem into meaningful components
+- determine what research is required
+- determine what innovation is required
+- produce a structured strategy
+- provide actionable recommendations
+- produce machine-readable output for future agents
+
+The exact behavior MUST be determined from the requirements and implementation_plan.md.
+
+Do not assume the above list is complete.
+
+==================================================
+6. LLM PROMPT ENGINEERING
+==================================================
+
+The LLM prompts are extremely important.
+
+Do NOT use vague prompts such as:
+
+"You are a strategist. Analyze the problem."
+
+Create detailed production-quality system prompts.
+
+The Strategist system prompt should clearly define:
+
+- identity
+- role
+- objective
+- responsibilities
+- reasoning approach
+- analysis methodology
+- constraints
+- expected input
+- expected output
+- output schema
+- quality requirements
+- hallucination prevention
+- handling of missing information
+- handling of conflicting requirements
+- distinction between facts, assumptions, and recommendations
+- downstream-agent compatibility
+- failure behavior
+
+The prompt should force the LLM to produce structured and useful results rather than generic text.
+
+Use explicit sections such as:
+
+ROLE
+OBJECTIVE
+INPUT
+RESPONSIBILITIES
+ANALYSIS PROCESS
+CONSTRAINTS
+OUTPUT REQUIREMENTS
+QUALITY CHECKS
+FAILURE HANDLING
+
+If structured output is required, enforce it through the LLM/framework rather than merely asking the model to "return JSON".
+
+==================================================
+7. LANGCHAIN
+==================================================
+
+Use LangChain according to the implementation plan.
+
+Do not add LangChain unnecessarily where plain application code is more appropriate.
+
+Determine:
+
+- model provider
+- model initialization
+- prompt templates
+- structured output
+- message handling
+- tools
+- chains
+- callbacks/logging if required
+
+Keep LLM-related code modular.
+
+Do not hard-code API keys.
+
+All credentials must come from environment variables.
+
+==================================================
+8. LANGGRAPH
+==================================================
+
+Use LangGraph where the implementation plan requires agent orchestration.
+
+Agent 1 should have a clear graph/state architecture.
+
+Define an appropriate state containing the information required during Strategist execution.
+
+For example, depending on the actual requirements:
+
+- user input
+- project context
+- messages
+- analysis
+- strategy
+- tool results
+- final structured output
+- errors/status
+
+Do NOT blindly copy this example.
+
+Determine the actual state from the requirements.
+
+The graph should be designed so that future agents can be connected without rewriting Agent 1.
+
+Clearly separate:
+
+- state
+- nodes
+- tools
+- LLM calls
+- orchestration
+- API layer
+
+==================================================
+9. TOOLS
+==================================================
+
+Read the tool-related requirement files before implementing tools.
+
+The project contains tool specifications such as:
+
+- tool 1
+- tool 2
+- tool 3
+
+Determine exactly which tools belong to Strategist.
+
+Implement only the tools required by Agent 1 at this stage.
+
+Each tool must have:
+
+- clear purpose
+- typed input
+- typed output
+- validation
+- error handling
+- appropriate description for the LLM
+- clean separation from the agent logic
+
+Do not fake tool results.
+
+If a required external API credential is not available yet, implement the integration interface/configuration correctly and make the missing credential failure explicit.
+
+==================================================
+10. DATABASE
+==================================================
+
+Set up the database architecture specified by implementation_plan.md.
+
+Use environment variables for:
+
+DATABASE_URI / DB_URI
+
+or whatever variable name is specified by the implementation plan.
+
+Do not hard-code connection strings.
+
+Determine whether Agent 1 actually requires persistent database storage.
+
+If it does:
+
+- define appropriate schema/model
+- implement database access cleanly
+- avoid putting database logic inside agent nodes
+- add proper error handling
+
+If it does not require persistence yet:
+
+- do not create unnecessary database complexity
+- however, prepare the architecture for future agents if required by the plan
+
+==================================================
+11. VECTOR DATABASE
+==================================================
+
+Understand the vector database requirements before integrating it.
+
+Use:
+
+VECTOR_DB_URI
+
+or the exact environment variable defined by the implementation plan.
+
+Determine whether Strategist needs vector search/retrieval.
+
+If Strategist does NOT need vector DB functionality, do not artificially add RAG just because LangChain is being used.
+
+If it does:
+
+- implement embeddings
+- implement vector store
+- implement retrieval
+- define relevant metadata
+- isolate retrieval logic
+- handle empty/no-result cases
+- handle API failures
+
+Follow the architecture defined in the implementation plan.
+
+==================================================
+12. LLM API
+==================================================
+
+Create a clean LLM provider abstraction.
+
+Credentials must be loaded from environment variables.
+
+Do not commit secrets.
+
+Create a proper .env.example containing required variables, for example:
+
+LLM_API_KEY=
+LLM_MODEL=
+DATABASE_URI=
+VECTOR_DB_URI=
+
+Use the exact names and providers specified by the implementation plan.
+
+If multiple providers are planned, design the code so the provider can be changed without rewriting the Strategist.
+
+==================================================
+13. EXPRESS BACKEND
+==================================================
+
+Build the backend using Express.js according to the implementation plan.
+
+The API layer should NOT contain the agent's business logic.
+
+Use a structure similar to:
+
+routes
+    ↓
+controllers
+    ↓
+services
+    ↓
+agents
+    ↓
+LangGraph
+    ↓
+LLM / Tools / DB
+
+Adapt this structure to the actual implementation plan if it specifies something different.
+
+Create a clean endpoint for invoking Agent 1.
+
+For example, only if consistent with the plan:
+
+POST /api/agents/strategist
+
+The endpoint should:
+
+1. validate request
+2. receive user/project input
+3. pass it to the Strategist service
+4. execute the LangGraph workflow
+5. return structured output
+6. handle failures correctly
+
+Do not expose internal implementation details unnecessarily.
+
+==================================================
+14. VALIDATION
+==================================================
+
+Use the validation library specified in the implementation plan.
+
+If Zod is part of the project stack, use Zod for:
+
+- request validation
+- environment validation where appropriate
+- tool inputs
+- structured agent outputs
+
+Do not rely solely on TypeScript types for runtime validation.
+
+==================================================
+15. PROJECT STRUCTURE
+==================================================
+
+Follow implementation_plan.md exactly wherever it specifies a structure.
+
+Do not create a random folder structure.
+
+Keep responsibilities separated.
+
+A possible conceptual structure may be:
+
+src/
+  config/
+  routes/
+  controllers/
+  services/
+  agents/
+    strategist/
+      strategist.agent.ts
+      strategist.graph.ts
+      strategist.state.ts
+      strategist.prompt.ts
+      strategist.tools.ts
+      strategist.schema.ts
+  tools/
+  models/
+  db/
+  vector/
+  llm/
+  middleware/
+  utils/
+  app.ts
+  server.ts
+
+BUT:
+
+Do NOT blindly use this structure.
+
+If implementation_plan.md specifies a different structure, follow the implementation plan.
+
+==================================================
+16. ERROR HANDLING
+==================================================
+
+Implement production-quality error handling.
+
+Handle:
+
+- invalid request
+- missing environment variables
+- LLM API failure
+- timeout
+- malformed LLM response
+- tool failure
+- database failure
+- vector DB failure
+- graph execution failure
+- unexpected exceptions
+
+Do not silently swallow errors.
+
+Return appropriate HTTP status codes and safe error messages.
+
+Never expose API keys or sensitive internal information.
+
+==================================================
+17. LOGGING
+==================================================
+
+Add useful development/debug logging where appropriate.
+
+Logs should make it possible to understand:
+
+- request received
+- Strategist execution started
+- tool invocation
+- graph node execution
+- LLM failure
+- final execution status
+
+Do not log secrets or unnecessarily sensitive user data.
+
+==================================================
+18. TESTING
+==================================================
+
+Agent 1 must actually work.
+
+Do not stop after creating files.
+
+Test:
+
+1. backend starts successfully
+2. environment validation works
+3. database connection works if required
+4. LLM integration works/configuration is correctly detected
+5. Strategist endpoint accepts valid input
+6. invalid input is rejected
+7. LangGraph executes
+8. Strategist produces the expected structured output
+9. tool calls work if required
+10. failures are handled correctly
+
+Create appropriate tests according to the implementation plan.
+
+If real API credentials are unavailable, clearly separate:
+
+- tests that can run locally without credentials
+- integration tests requiring external credentials
+
+Do not pretend an integration works if it has not been tested.
+
+==================================================
+19. DO NOT BUILD EVERYTHING AT ONCE
+==================================================
+
+This is extremely important.
+
+Implement the system ONE AGENT AT A TIME.
+
+Current scope:
+
+PHASE 1:
+Project setup
++
+Shared backend infrastructure
++
+Agent 1 — Strategist
+
+DO NOT implement:
+
+- Agent 2 — Researcher
+- Agent 3 — Innovation Agent
+- other future agents
+
+unless a minimal shared interface/type is required.
+
+The architecture must be extensible, but the implementation should focus on Agent 1.
+
+==================================================
+20. DEVELOPMENT PROCESS
+==================================================
+
+Follow this exact workflow:
+
+STEP 1
+Read every file in requirements/.
+
+STEP 2
+Read implementation_plan.md completely.
+
+STEP 3
+Read implementation_plan2.md.resolved if present.
+
+STEP 4
+Understand the complete multi-agent architecture.
+
+STEP 5
+Identify everything required specifically for Agent 1.
+
+STEP 6
+Inspect the existing project structure before creating files.
+
+STEP 7
+Determine what already exists.
+
+Do NOT recreate existing functionality.
+
+STEP 8
+Create/update the backend project structure.
+
+STEP 9
+Install only the required dependencies.
+
+STEP 10
+Configure environment variables.
+
+STEP 11
+Implement shared infrastructure.
+
+STEP 12
+Implement Strategist schemas/types.
+
+STEP 13
+Implement Strategist prompts.
+
+STEP 14
+Implement Strategist tools.
+
+STEP 15
+Implement Strategist LangGraph.
+
+STEP 16
+Implement Strategist service.
+
+STEP 17
+Implement Express route/controller.
+
+STEP 18
+Implement validation and error handling.
+
+STEP 19
+Run the application.
+
+STEP 20
+Test Agent 1 end-to-end.
+
+STEP 21
+Fix all errors.
+
+STEP 22
+Verify the implementation against implementation_plan.md.
+
+STEP 23
+Only after Agent 1 works, stop.
+
+==================================================
+21. IMPORTANT IMPLEMENTATION RULES
+==================================================
+
+- Do not guess requirements.
+- Do not skip files in requirements/.
+- Do not start coding before understanding the implementation plan.
+- Do not replace the planned architecture with a simpler architecture just because it is easier.
+- Do not over-engineer functionality not required by the plan.
+- Do not hard-code secrets.
+- Do not fabricate API responses.
+- Do not create fake tool implementations that appear functional.
+- Do not implement future agents yet.
+- Do not create generic "AI chatbot" behavior.
+- Strategist must produce structured strategic intelligence.
+- Keep agent logic independent from Express.
+- Keep LLM logic independent from controllers.
+- Keep tools independent from graph orchestration.
+- Keep database/vector database logic modular.
+- Use strong runtime validation.
+- Make errors explicit.
+- Make the code production-oriented.
+- Make the implementation easy to extend with Agent 2 and Agent 3 later.
+
+==================================================
+22. FINAL VERIFICATION
+==================================================
+
+Before declaring the task complete, verify:
+
+[ ] All requirements files were read.
+[ ] implementation_plan.md was read completely.
+[ ] resolved implementation plan was checked.
+[ ] Existing project structure was inspected.
+[ ] Architecture follows the implementation plan.
+[ ] Express backend works.
+[ ] Environment configuration works.
+[ ] LLM integration is correctly implemented.
+[ ] LangChain integration is correct.
+[ ] LangGraph integration is correct.
+[ ] Required tools are integrated.
+[ ] Database integration is correct if required.
+[ ] Vector DB integration is correct if required.
+[ ] Strategist prompt is detailed and production-quality.
+[ ] Strategist output is structured and validated.
+[ ] Strategist endpoint works.
+[ ] Error handling works.
+[ ] Tests have been executed.
+[ ] Agent 1 works independently.
+[ ] No unnecessary future agents were implemented.
+
+==================================================
+23. FINAL RESPONSE FORMAT
+==================================================
+
+When implementation is complete, provide:
+
+1. What you discovered from the requirements.
+2. What implementation_plan.md required.
+3. Final architecture used.
+4. Files created.
+5. Files modified.
+6. Dependencies installed.
+7. Environment variables required.
+8. Agent 1 workflow.
+9. Strategist input/output schema.
+10. API endpoint.
+11. Tools integrated.
+12. Tests executed and their results.
+13. Any remaining configuration requiring credentials.
+14. What should be implemented next.
+
+Do not claim something is working unless you actually verified it.
+
+START NOW:
+
+First inspect the complete requirements folder and implementation_plan.md.
+
+Do NOT write implementation code until you have understood those files.

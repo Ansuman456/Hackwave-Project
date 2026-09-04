@@ -1,0 +1,55 @@
+import { z } from "zod";
+declare const envSchema: z.ZodObject<{
+    NODE_ENV: z.ZodDefault<z.ZodEnum<["development", "production", "test"]>>;
+    PORT: z.ZodDefault<z.ZodNumber>;
+    MONGODB_URI: z.ZodDefault<z.ZodString>;
+    GEMINI_API_KEY: z.ZodDefault<z.ZodString>;
+    GEMINI_MODEL: z.ZodDefault<z.ZodString>;
+    GROQ_API_KEY: z.ZodDefault<z.ZodOptional<z.ZodString>>;
+    GROQ_MODEL: z.ZodDefault<z.ZodOptional<z.ZodString>>;
+    TAVILY_API_KEY: z.ZodDefault<z.ZodString>;
+    GITHUB_TOKEN: z.ZodDefault<z.ZodString>;
+    DEEPSEEK_API_KEY: z.ZodDefault<z.ZodString>;
+    DEEPSEEK_BASE_URL: z.ZodDefault<z.ZodString>;
+    DEEPSEEK_MODEL: z.ZodDefault<z.ZodString>;
+    VECTOR_DB_PROVIDER: z.ZodDefault<z.ZodOptional<z.ZodString>>;
+    VECTOR_DB_URL: z.ZodDefault<z.ZodOptional<z.ZodString>>;
+    VECTOR_DB_API_KEY: z.ZodDefault<z.ZodOptional<z.ZodString>>;
+}, "strip", z.ZodTypeAny, {
+    NODE_ENV: "development" | "production" | "test";
+    PORT: number;
+    MONGODB_URI: string;
+    GEMINI_API_KEY: string;
+    GEMINI_MODEL: string;
+    GROQ_API_KEY: string;
+    GROQ_MODEL: string;
+    TAVILY_API_KEY: string;
+    GITHUB_TOKEN: string;
+    DEEPSEEK_API_KEY: string;
+    DEEPSEEK_BASE_URL: string;
+    DEEPSEEK_MODEL: string;
+    VECTOR_DB_PROVIDER: string;
+    VECTOR_DB_URL: string;
+    VECTOR_DB_API_KEY: string;
+}, {
+    NODE_ENV?: "development" | "production" | "test" | undefined;
+    PORT?: number | undefined;
+    MONGODB_URI?: string | undefined;
+    GEMINI_API_KEY?: string | undefined;
+    GEMINI_MODEL?: string | undefined;
+    GROQ_API_KEY?: string | undefined;
+    GROQ_MODEL?: string | undefined;
+    TAVILY_API_KEY?: string | undefined;
+    GITHUB_TOKEN?: string | undefined;
+    DEEPSEEK_API_KEY?: string | undefined;
+    DEEPSEEK_BASE_URL?: string | undefined;
+    DEEPSEEK_MODEL?: string | undefined;
+    VECTOR_DB_PROVIDER?: string | undefined;
+    VECTOR_DB_URL?: string | undefined;
+    VECTOR_DB_API_KEY?: string | undefined;
+}>;
+export type EnvConfig = z.infer<typeof envSchema>;
+export declare function getConfig(): EnvConfig;
+export declare function validateEnv(): void;
+export {};
+//# sourceMappingURL=env.d.ts.map

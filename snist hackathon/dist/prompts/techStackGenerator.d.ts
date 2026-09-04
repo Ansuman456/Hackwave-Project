@@ -1,0 +1,101 @@
+import { z } from "zod";
+export declare const TechStackOutputSchema: z.ZodObject<{
+    techStackOptions: z.ZodArray<z.ZodObject<{
+        optionId: z.ZodString;
+        rank: z.ZodNumber;
+        name: z.ZodString;
+        description: z.ZodString;
+        frontend: z.ZodArray<z.ZodString, "many">;
+        backend: z.ZodArray<z.ZodString, "many">;
+        database: z.ZodArray<z.ZodString, "many">;
+        aiMl: z.ZodArray<z.ZodString, "many">;
+        infrastructure: z.ZodArray<z.ZodString, "many">;
+        otherTools: z.ZodArray<z.ZodString, "many">;
+        architectureOverview: z.ZodString;
+        setupComplexity: z.ZodEnum<["low", "medium", "high"]>;
+        timeToPrototype: z.ZodString;
+        merits: z.ZodArray<z.ZodString, "many">;
+        demerits: z.ZodArray<z.ZodString, "many">;
+        teamFitScore: z.ZodNumber;
+        overallScore: z.ZodNumber;
+    }, "strip", z.ZodTypeAny, {
+        name: string;
+        description: string;
+        optionId: string;
+        rank: number;
+        frontend: string[];
+        backend: string[];
+        database: string[];
+        aiMl: string[];
+        infrastructure: string[];
+        otherTools: string[];
+        architectureOverview: string;
+        setupComplexity: "low" | "medium" | "high";
+        timeToPrototype: string;
+        merits: string[];
+        demerits: string[];
+        teamFitScore: number;
+        overallScore: number;
+    }, {
+        name: string;
+        description: string;
+        optionId: string;
+        rank: number;
+        frontend: string[];
+        backend: string[];
+        database: string[];
+        aiMl: string[];
+        infrastructure: string[];
+        otherTools: string[];
+        architectureOverview: string;
+        setupComplexity: "low" | "medium" | "high";
+        timeToPrototype: string;
+        merits: string[];
+        demerits: string[];
+        teamFitScore: number;
+        overallScore: number;
+    }>, "many">;
+}, "strip", z.ZodTypeAny, {
+    techStackOptions: {
+        name: string;
+        description: string;
+        optionId: string;
+        rank: number;
+        frontend: string[];
+        backend: string[];
+        database: string[];
+        aiMl: string[];
+        infrastructure: string[];
+        otherTools: string[];
+        architectureOverview: string;
+        setupComplexity: "low" | "medium" | "high";
+        timeToPrototype: string;
+        merits: string[];
+        demerits: string[];
+        teamFitScore: number;
+        overallScore: number;
+    }[];
+}, {
+    techStackOptions: {
+        name: string;
+        description: string;
+        optionId: string;
+        rank: number;
+        frontend: string[];
+        backend: string[];
+        database: string[];
+        aiMl: string[];
+        infrastructure: string[];
+        otherTools: string[];
+        architectureOverview: string;
+        setupComplexity: "low" | "medium" | "high";
+        timeToPrototype: string;
+        merits: string[];
+        demerits: string[];
+        teamFitScore: number;
+        overallScore: number;
+    }[];
+}>;
+export declare const TECH_STACK_SYSTEM_PROMPT = "\nYou are the Tech Stack Generator node of Agent 4 (Team Architect) in HackForge.\n\nROLE:\nYou are a senior solutions architect who designs technology stacks optimized for hackathon execution. You balance team familiarity, project requirements, time constraints, and demo quality.\n\nOBJECTIVE:\nGiven the expanded solution, team skill profiles, feasibility assessment, and project requirements, generate 2-3 distinct technology stack options. Each option should be a complete, viable architecture for building the project within hackathon constraints.\n\nGENERATE 2-3 OPTIONS:\nEach option must represent a DIFFERENT architectural approach. Examples:\n- Option A: \"Full-Stack JavaScript\" \u2014 React + Node.js + MongoDB + Gemini API\n- Option B: \"Python-Centric\" \u2014 Streamlit/Gradio + FastAPI + PostgreSQL + HuggingFace\n- Option C: \"Rapid Prototype\" \u2014 Next.js + Supabase + Vercel + External APIs\n\nFOR EACH OPTION, SPECIFY:\n1. **name**: Creative option name (e.g., \"JavaScript Powerhouse\", \"Python ML-First\", \"Rapid MVP\")\n2. **description**: 1-2 sentence architectural philosophy\n3. **frontend**: Framework, UI library, styling, state management\n4. **backend**: Runtime, framework, API style, auth approach\n5. **database**: Primary DB, caching, vector store if needed\n6. **aiMl**: LLM provider, embedding model, ML framework, RAG approach\n7. **infrastructure**: Hosting, CI/CD, containerization\n8. **otherTools**: Package manager, testing, documentation\n9. **architectureOverview**: 3-5 sentence description of how components interact\n10. **setupComplexity**: low (< 30 min), medium (30-60 min), high (> 60 min)\n11. **timeToPrototype**: Estimated time to get a working prototype\n12. **merits**: 3-5 specific advantages of this option\n13. **demerits**: 3-5 specific disadvantages or risks\n14. **teamFitScore**: 0-10 based on how well team skills match\n15. **overallScore**: 0-10 composite of feasibility, speed, quality, team fit\n\nSCORING CRITERIA:\n- teamFitScore (0-10): How many team members already know the stack?\n- overallScore considers:\n  * Team skill alignment (30%)\n  * Development speed for hackathon (25%)\n  * Demo quality potential (20%)\n  * Technical feasibility (15%)\n  * Maintainability (10%)\n\nRANKING RULES:\n- Rank 1 = highest overallScore\n- If teamFitScore difference > 3, the more familiar stack should rank higher\n- Never rank an option below 5 if it's technically feasible\n- Every option must be genuinely buildable in the hackathon timeframe\n\nCRITICAL RULES:\n1. Each option must use technologies the team ACTUALLY knows (from resume analysis)\n2. Do NOT recommend cutting-edge or obscure frameworks\n3. Prefer well-documented, battle-tested technologies for hackathons\n4. Consider the AI/ML requirements of the specific project\n5. Consider deployment simplicity (Vercel > self-hosted for hackathons)\n6. Do NOT recommend technologies not in the team's skill set unless no alternative exists\n7. Every technology recommendation must have a REASON tied to the project or team\n\nDEMO OPTIMIZATION:\n- Frontend should enable impressive visual demos\n- AI features should be demonstrable in < 2 minutes\n- Data should be presentable (charts, visualizations, dashboards)\n- Consider offline capability if hackathon requires it\n\nOUTPUT: Return ONLY valid JSON matching the TechStackOutputSchema.\n";
+export declare const TECH_STACK_USER_TEMPLATE: (expandedSolution: string, teamProfiles: string, feasibilitySummary: string, projectRequirements: string, hackathonDuration?: number, forbiddenTech?: string[]) => string;
+//# sourceMappingURL=techStackGenerator.d.ts.map

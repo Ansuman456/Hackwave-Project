@@ -1,0 +1,566 @@
+AGENT 3 — INNOVATION AGENT
+Complete Implementation Prompt for HackForge
+ROLE
+Act as a senior:
+product innovation strategist
+AI product researcher
+competitive intelligence analyst
+startup ideation expert
+hackathon mentor
+information synthesis engineer
+LangChain/LangGraph engineer
+You are implementing Agent 3 — Innovation Agent inside the HackForge platform.
+The previous agent is:
+Agent 2 — Researcher
+The next agent is:
+Agent 4 — Team Architect
+Your responsibility is to analyze the researched solution landscape and determine:
+What can our team build that is meaningfully differentiated from what already exists?
+You must NOT simply generate a creative idea.
+You must derive ideas from:
+Problem+Existing solutions+Existing features+Existing workflows+Target users+Existing limitations+Research gaps
+The result must be evidence-backed innovation, not generic brainstorming.
+1. CORE RESPONSIBILITY
+The Innovation Agent answers:
+What already exists?        ↓What approaches dominate?        ↓What features are common?        ↓What features are rare?        ↓What combinations already exist?        ↓What user needs are underserved?        ↓What workflow gaps exist?        ↓What constraints are poorly handled?        ↓What meaningful opportunities exist?        ↓What candidate solutions could exploit them?        ↓Which candidate is best for this hackathon?
+2. VERY IMPORTANT ROLE BOUNDARY
+The Researcher has already done web research.
+The Innovation Agent should initially use:
+ResearchResult
+as its primary knowledge source.
+Do NOT repeat all research unnecessarily.
+Do NOT perform web search just because more information might be useful.
+Only perform additional research when:
+a major uncertainty blocks the innovation decision
+conflicting evidence needs verification
+a critical competitor is insufficiently understood
+a proposed innovation appears suspiciously similar to an existing solution
+Any optional verification search must use the same web-research abstraction used by the Researcher.
+3. INPUT
+The Innovation Agent receives:
+interface InnovationInput {  projectId: string;  problemStatement: string;  problemAnalysis: ProblemAnalysis;  research: ResearchResult;  hackathon?: {    durationHours?: number;    judgingCriteria?: {      name: string;      weight?: number;      description?: string;    }[];    rules?: string[];    restrictions?: string[];  };}
+4. PRIMARY OUTPUT
+Return:
+interface InnovationResult {  innovationId: string;  problemOpportunity: ProblemOpportunity;  solutionLandscape: SolutionLandscape;  featureLandscape: FeatureLandscape[];  workflowLandscape: WorkflowLandscape[];  identifiedGaps: InnovationGap[];  opportunityAreas: OpportunityArea[];  candidateIdeas: CandidateIdea[];  selectedIdea: CandidateIdea;  differentiation: DifferentiationAnalysis;  noveltyAssessment: NoveltyAssessment;  validationQuestions: string[];  confidence: number;}
+5. DO NOT CREATE EMPTY STRUCTURES
+The output must contain useful information.
+At minimum:
+problemOpportunitysolutionLandscapefeatureLandscapeidentifiedGapscandidateIdeasselectedIdeadifferentiationnoveltyAssessment
+must be meaningfully populated.
+Do not output:
+{  "featureLandscape": [],  "identifiedGaps": [],  "candidateIdeas": []}
+unless the ResearchResult genuinely contains insufficient information.
+If the research is insufficient, explicitly say so.
+6. FIRST STAGE — UNDERSTAND THE OPPORTUNITY
+Before comparing solutions, define what the problem fundamentally requires.
+Create:
+interface ProblemOpportunity {  coreProblem: string;  targetUsers: string[];  desiredOutcomes: string[];  criticalPainPoints: string[];  importantConstraints: string[];  userJobs: string[];  successCriteria: string[];}
+This should come primarily from ProblemAnalysis.
+Do not invent completely new problem definitions.
+7. SOLUTION LANDSCAPE
+Transform the Researcher’s discoveredSolutions into a normalized landscape.
+Create:
+interface SolutionLandscape {  totalSolutions: number;  directSolutions: number;  adjacentSolutions: number;  technicalApproaches: number;  dominantApproaches: string[];  majorSolutionClusters: SolutionCluster[];  overallObservations: string[];}
+8. SOLUTION CLUSTER
+Create:
+interface SolutionCluster {  id: string;  name: string;  description: string;  solutionIds: string[];  commonFeatures: string[];  commonWorkflowElements: string[];  distinguishingCharacteristics: string[];}
+Example:
+Cluster:Demand ForecastingSolutions:A, C, FCommon:historical demand dataprediction modelDistinguishing:some use attendancesome use POS data
+9. CLUSTERING METHOD
+Use semantic similarity where practical.
+Possible pipeline:
+discoveredSolutions      ↓create normalized solution representation      ↓embeddings      ↓similarity      ↓clusters
+But do not blindly trust clustering.
+The LLM should interpret the clusters and name them.
+10. FEATURE LANDSCAPE
+This is one of the most important outputs.
+The Researcher provides:
+Solution→ Feature list
+Innovation must transform that into:
+Feature→ How many solutions have it?→ Which solutions have it?→ What variants exist?
+Use:
+interface FeatureLandscape {  featureId: string;  canonicalName: string;  description: string;  category: string;  occurrenceCount: number;  totalRelevantSolutions: number;  frequency: number;  solutionIds: string[];  frequencyClass:    | "common"    | "moderate"    | "rare";  variants: string[];  evidenceSourceIds: string[];}
+11. FEATURE NORMALIZATION
+Different names may represent the same capability.
+Example:
+"Instant notifications""Real-time alerts""Threshold alerts"
+may normalize to:
+Alerts
+But retain variants.
+Do not accidentally merge genuinely different capabilities.
+12. COMMON FEATURES
+Identify:
+features appearing across many relevant solutions
+Example:
+Analytics → 9/12User dashboard → 8/12Notifications → 7/12Search → 6/12
+These are important because they are usually weak sources of differentiation.
+13. RARE FEATURES
+Identify:
+features appearing in only a small number of solutions
+But do NOT assume:
+rare = innovative
+A rare feature might simply be irrelevant.
+Evaluate relevance separately.
+14. FEATURE COMBINATION ANALYSIS
+This is critical.
+Innovation should not only ask:
+“Does feature X exist?”
+It should ask:
+“Does the COMBINATION of features X + Y + Z already exist?”
+Example:
+Prediction+Offline mode
+may individually exist.
+But:
+Prediction+offline mode+worker-assisted correction+automatic prioritization
+may be uncommon.
+Create:
+interface FeatureCombination {  features: string[];  solutionIds: string[];  occurrenceCount: number;  noveltySignal:    | "common"    | "moderate"    | "uncommon";}
+15. WORKFLOW LANDSCAPE
+Features alone are not enough.
+Compare complete workflows.
+Create:
+interface WorkflowLandscape {  commonWorkflowPatterns: WorkflowPattern[];  workflowGaps: WorkflowGap[];  underservedWorkflowStages: string[];}
+16. WORKFLOW PATTERN
+Example:
+interface WorkflowPattern {  name: string;  steps: string[];  solutionIds: string[];  occurrenceCount: number;}
+Example:
+Input ↓AI prediction ↓Dashboard
+appears across many systems.
+This is a common workflow.
+17. WORKFLOW GAP
+Look for:
+Input ↓existing process ↓existing output ↓missing step
+Example:
+Existing:detect→ classify→ reportMissing:automatic follow-up action
+This is a potentially useful opportunity.
+Create:
+interface WorkflowGap {  description: string;  affectedSolutions: string[];  userImpact: string;  evidenceSourceIds: string[];  opportunityStrength: number;}
+18. USER GAP ANALYSIS
+Ask:
+Which users are being ignored?Which users are underserved?Which users receive a poor workflow?Which context is poorly handled?
+Example:
+Most solutions:commercial kitchensProblem statement:college hostels
+Potential gap:
+student-hostel-specific workflow
+Do not automatically call this novel; compare it with evidence.
+19. CONSTRAINT GAP ANALYSIS
+Look for constraints that existing solutions do not handle well:
+offlinelow bandwidthlow budgetlow technical skilllimited hardwareprivacysmall organizationsstudent environments
+Only use constraints that are relevant to the problem.
+20. OPPORTUNITY AREA
+Each detected opportunity should become:
+interface OpportunityArea {  id: string;  title: string;  description: string;  basedOnGaps: string[];  affectedUsers: string[];  relevantExistingSolutions: string[];  potentialValue: string;  differentiationPotential: number;  feasibilityPotential: number;}
+21. IDENTIFIED GAP
+Create:
+interface InnovationGap {  id: string;  type:    | "feature"    | "workflow"    | "user"    | "context"    | "constraint"    | "integration"    | "automation"    | "data"    | "other";  title: string;  description: string;  supportingSolutionIds: string[];  supportingSourceIds: string[];  impact: number;  confidence: number;}
+22. GAP QUALITY RULE
+A gap must have evidence.
+Bad:
+“Nobody provides WhatsApp integration.”
+unless your research actually supports that conclusion.
+Better:
+“Among the researched solutions, none of the 12 direct solutions were found to expose a WhatsApp-based interaction workflow.”
+This is much more defensible.
+Use wording based on the research scope.
+23. NEVER CLAIM ABSOLUTE NOVELTY
+Never produce:
+100% uniqueNobody has built thisFirst in the worldNo competitor exists
+Instead use:
+high differentiationmoderate differentiationlow differentiation
+and describe the evidence.
+24. CANDIDATE IDEA GENERATION
+Generate approximately:
+3–5 candidate solutions
+Do not generate 20.
+Each candidate must be grounded in an identified opportunity.
+25. CANDIDATE IDEA SCHEMA
+interface CandidateIdea {  id: string;  name: string;  oneLineDescription: string;  detailedDescription: string;  targetUsers: string[];  problemSolved: string;  keyFeatures: Feature[];  workflow: WorkflowStep[];  differentiators: Differentiator[];  opportunityIds: string[];  inspirationSources: string[];  potentialRisks: string[];  estimatedComplexity:    | "low"    | "medium"    | "high";  estimatedHackathonFit:    number;  innovationScore:    number;  impactScore:    number;  differentiationScore:    number;  overallConceptScore:    number;}
+26. CANDIDATE GENERATION RULE
+Every candidate must answer:
+What existing gap does this address?Why is this different?Why would users care?Why can a hackathon team demonstrate it?
+Do not generate generic:
+"AI-powered platform"
+ideas.
+27. DIFFERENTIATOR
+Create:
+interface Differentiator {  statement: string;  differenceType:    | "feature"    | "workflow"    | "user"    | "context"    | "integration"    | "constraint"    | "automation"    | "combination";  comparedToSolutionIds: string[];  evidenceSourceIds: string[];  strength: number;}
+Example:
+Differentiator:"Automatically converts predicted demand into a preparation recommendation."Type:workflowCompared solutions:sol_1sol_4sol_7Strength:8.2
+28. CANDIDATE EVALUATION
+Evaluate each candidate using:
+Problem FitUser ValueDifferentiationFeature NoveltyWorkflow NoveltyImpactHackathon FeasibilityDemo PotentialAI Necessity
+Use 0–10 scores.
+29. SCORE FORMULA
+Use deterministic aggregation.
+Example:
+overallConceptScore =  problemFit * 0.15 +  differentiation * 0.20 +  featureNovelty * 0.15 +  workflowNovelty * 0.15 +  impact * 0.15 +  hackathonFit * 0.10 +  demoPotential * 0.05 +  aiNecessity * 0.05;
+Keep weights configurable.
+Do not let the LLM randomly invent the final score.
+30. SELECTED IDEA
+Select the highest-value candidate, but do not blindly choose the numerical winner.
+Apply sanity checks:
+Is the candidate actually relevant?Is its differentiation meaningful?Can a student team build an MVP?Is the idea understandable?Does it fit the hackathon?
+If the mathematically highest candidate fails a hard requirement, choose the next valid candidate and explain why.
+31. HARD REJECTION RULES
+Reject a candidate if:
+essentially identical to an existing solutionORrequires impossible resourcesORrequires unavailable data with no fallbackORcannot reasonably be demonstratedORviolates hackathon rulesORrequires prohibited technology
+32. NOVELTY ASSESSMENT
+Create:
+interface NoveltyAssessment {  classification:    | "high_differentiation"    | "moderate_differentiation"    | "low_differentiation";  score: number;  reasoning: string;  strongestDifferentiators: string[];  majorOverlapAreas: string[];  closestExistingSolutions: string[];  evidenceSourceIds: string[];  confidence: number;}
+33. NOVELTY SCORING
+Novelty should consider:
+feature overlapworkflow overlaptarget-user overlapproblem overlapfeature combination overlapdifferentiation strength
+Example:
+High overlap:problemusers3 core featuresLow overlap:workflowfeature combinationResult:moderate/high differentiation
+34. IMPORTANT: NOVELTY ≠ FEATURE RARITY
+Do NOT conclude:
+Feature is rare→ therefore idea is novel
+Instead:
+Feature rarity+relevance+combination+workflow+user context
+determine the differentiation signal.
+35. CLOSEST EXISTING SOLUTION
+For the selected candidate identify:
+top 3 closest solutions
+and explain:
+What overlaps?What differs?Why the difference matters?
+Schema:
+interface SolutionComparison {  solutionId: string;  overlap: string[];  differences: string[];  differentiationStrength: number;}
+36. FEATURE MATRIX
+Create a machine-readable matrix.
+Example:
+                 A   B   C   D   OUR IDEAPrediction       ✓   ✓   -   ✓      ✓Alerts           ✓   ✓   ✓   -      ✓Analytics        ✓   ✓   ✓   ✓      ✓Offline mode     -   -   ✓   -      ✓Auto action      -   -   -   -      ✓
+This should be generated programmatically from normalized features.
+Do not ask the LLM to manually count everything when JavaScript can do it.
+37. WHY THIS FEATURE MATRIX MATTERS
+It will be used by:
+frontend visualization
+Judge
+CTO
+downstream reporting
+hackathon presentation
+38. EVIDENCE TRACEABILITY
+For every important novelty claim store:
+claim+supporting solution IDs+supporting source IDs
+Example:
+Claim:"Automatic action recommendation was not identifiedamong the directly researched solutions."Supporting:sol_1sol_3sol_7sol_9
+Use cautious wording:
+“was not identified in the researched set”
+not:
+“does not exist anywhere.”
+39. ADDITIONAL VERIFICATION SEARCH
+Normally Innovation should not search the internet.
+However, implement an optional verification path.
+Trigger if:
+candidate similarity > thresholdORa critical gap has weak evidenceORselected idea appears too similar to a discovered solution
+Then:
+verification query ↓Gemini + Tavily ↓update evidence
+This keeps Innovation efficient while protecting against obvious false novelty.
+40. VERIFICATION LOOP
+Candidate ↓Similarity check ↓Looks suspicious? /       \NO       YES |        |continue  verification search            ↓        new evidence            ↓        re-evaluate
+Maximum verification rounds:
+2
+41. VECTOR SIMILARITY
+If embeddings are available:
+Use them for:
+solution similarityfeature similaritycandidate idea similarity
+Example:
+candidate embedding       ↓nearest existing solutions       ↓top 5
+Then the LLM interprets the result.
+Do not rely exclusively on cosine similarity.
+42. SEMANTIC REPRESENTATION
+For solution comparison create:
+normalizedSolutionText =problemSolved+targetUsers+approach+features+workflow
+This gives a better representation than just:
+description
+43. FEATURE SEMANTIC MATCHING
+Different existing solutions may use different wording.
+Example:
+"Predict future demand""Forecast consumption""Estimate upcoming meal requirements"
+Treat these as potentially related.
+Use:
+normalization+semantic similarity+LLM verification
+Do not rely only on exact string matching.
+44. COMMON VS DIFFERENTIATED FEATURES
+Create categories:
+COMMONUNCOMMONRAREUNIQUE-TO-CANDIDATE
+But avoid saying “unique” globally.
+Prefer:
+not observed in researched set
+instead of:
+unique in the world
+45. IDEA IMPROVEMENT
+The Innovation Agent should optionally improve its own candidate.
+For each candidate:
+weakness:too similar
+then:
+remove common capability+add evidence-backed gap
+Example:
+Generic:AI food waste analyticsImproved:AI system that converts anonymousstudent meal intent into short-termpreparation recommendations.
+46. IDEA REJECTION AND REGENERATION
+If all candidates score poorly:
+candidate score < threshold
+generate a new candidate set based on the strongest gaps.
+Maximum regeneration cycles:
+2
+Never generate indefinitely.
+47. CANDIDATE QUALITY THRESHOLD
+Use configurable values:
+overallConceptScore >= 7.0
+and:
+differentiationScore >= 6.5
+and:
+hackathonFit >= 6.5
+Do not accept a candidate that is impressive but impossible to build.
+48. FINAL SELECTED IDEA REQUIREMENTS
+The selected idea must contain:
+clear problemclear usersclear valuespecific featuresspecific workflowspecific differentiatorsevidence-backed differentiationrealistic MVP
+Do not allow vague selected ideas.
+49. OUTPUT TO TEAM ARCHITECT
+Agent 4 should receive:
+text id="g8ul3i" selectedIdea + keyFeatures + requiredCapabilities + technicalImplications + risks + hackathonConstraints
+So add:
+interface ProjectCapabilityRequirements {  requiredCapabilities: string[];  technicalCapabilities: string[];  likelyRoles: string[];  complexityAreas: string[];  potentialSkillGaps: string[];}
+Include this inside InnovationResult.
+50. PROJECT CAPABILITY REQUIREMENTS
+Example:
+requiredCapabilities:- real-time data ingestion- demand prediction- recommendation generation- student interaction workflowtechnicalCapabilities:- REST APIs- ML prediction- authentication- analytics
+This directly helps Team Architect.
+51. IMPORTANT: DON’T PREMATURELY FINALIZE TECH STACK
+Innovation can say:
+requires:prediction serviceweb applicationpersistent data
+but should not decide:
+ReactNodeMongoDBRedis
+CTO owns final architecture.
+52. INNOVATION EVENT STREAM
+Emit:
+text id="7ipuef" innovation_started solution_landscape_built feature_analysis_started feature_landscape_completed gap_analysis_started candidate_generation_started candidate_evaluated verification_started selected_idea innovation_completed
+53. FRONTEND INNOVATION VIEW
+Show:
+```text id=“j5xgsc” EXISTING SOLUTION LANDSCAPE
+12 relevant solutions
+9 direct 3 adjacent
+Then:```text id="qz3n3t"COMMON FEATURESAnalytics       9/12Alerts          7/12Tracking        6/12
+Then:
+```text id=“qv7d7s” RARE FEATURES
+Offline support 2/12 Image analysis 1/12
+Then:```text id="2vknq7"IDENTIFIED GAPS1. No strong hostel-specific workflow identified2. Limited automation after prediction3. Manual follow-up in most systems
+Then:
+```text id=“8su97v” CANDIDATE IDEAS
+A B C
+Then:```text id="o2yk6k"SELECTED IDEAScore: 8.7/10Differentiation: 8.9/10Hackathon fit: 9.2/10
+54. AGENT 3 NODE IMPLEMENTATION
+Create:
+innovationNode(state: HackathonState)
+It should:
+Read problemAnalysis.
+Read research.
+Build normalized solution landscape.
+Normalize features.
+Calculate feature frequency.
+Analyze workflow patterns.
+Identify evidence-backed gaps.
+Generate 3–5 candidate ideas.
+Score candidates.
+Select candidate.
+Optionally perform targeted verification.
+Validate final result.
+Persist.
+Emit events.
+Return innovation.
+55. RECOMMENDED INTERNAL NODE BREAKDOWN
+Even though Innovation is one logical agent, implement internal nodes:
+text id="3q3fcu" normalizeSolutions  ↓ buildFeatureLandscape  ↓ buildWorkflowLandscape  ↓ identifyGaps  ↓ buildOpportunityAreas  ↓ generateCandidates  ↓ scoreCandidates  ↓ selectCandidate  ↓ verifyIfNecessary  ↓ finalizeInnovation
+These are deterministic/LLM hybrid nodes.
+56. WHAT SHOULD USE CODE VS LLM
+Deterministic code
+Use JavaScript/TypeScript for:
+feature frequencycountsmatrix generationscoressortingdeduplicationsimilarity thresholdscandidate ranking
+LLM
+Use for:
+semantic normalizationgap interpretationworkflow interpretationcandidate generationdifferentiation reasoningfinal explanation
+This reduces hallucination and cost.
+57. FEATURE FREQUENCY SHOULD NOT BE LLM-GUESSED
+Given:
+12 solutions
+and normalized feature arrays:
+["analytics", "alerts"]["analytics"]["analytics", "alerts"]
+calculate:
+analytics = 3alerts = 2
+with JavaScript.
+Do not ask Gemini:
+“How many solutions have analytics?”
+58. SAME FOR SCORING
+Use deterministic formulas.
+LLM produces component judgments:
+innovation = 8impact = 9
+JavaScript calculates:
+overall = weighted sum
+This ensures consistency.
+59. LLM STRUCTURED OUTPUT
+All LLM outputs must use structured schemas.
+Use Zod.
+If invalid:
+retry
+Maximum:
+2 retries
+60. INNOVATION AGENT EDGE CASE — NO CLEAR GAP
+If existing solutions appear to cover the problem thoroughly:
+Do NOT invent a fake gap.
+Instead:
+No strong obvious gap identified.
+Then generate candidates from:
+different user segmentdifferent contextbetter workflowbetter accessibilitybetter automationbetter constraint handling
+If still weak:
+selectedIdea = nullstatus = "insufficient differentiation"
+Do not fabricate innovation.
+The main graph should then decide whether to return to Researcher for additional investigation.
+61. EDGE CASE — ONE EXISTING SOLUTION
+If only one direct solution exists:
+Do not claim novelty solely because there is only one.
+Use:
+direct solution:1adjacent:...research confidence:medium/low
+and compare carefully.
+62. EDGE CASE — MANY EXISTING SOLUTIONS
+If there are 50+ existing solutions:
+Use:
+clustersfrequencyrepresentative solutions
+instead of sending every full object into one giant LLM context.
+Summarize systematically.
+63. EDGE CASE — SIMILAR NAMES BUT DIFFERENT PRODUCTS
+Do not merge merely because names are similar.
+Use:
+domainusersproblemfeaturesworkflow
+to distinguish.
+64. EDGE CASE — SIMILAR FEATURE WORDING
+Normalize semantically, but preserve original evidence.
+Example:
+"Smart notifications""automated alerts"
+may map to:
+alerts
+but store variants.
+65. EDGE CASE — LLM SUGGESTS UNSUPPORTED GAP
+If LLM claims:
+“No competitor supports offline mode.”
+but the ResearchResult contains an offline competitor:
+reject that claim.
+Gap analysis must be grounded in actual input data.
+66. EDGE CASE — CANDIDATE IDENTICAL TO EXISTING SOLUTION
+If:
+candidate similarity > high threshold
+reject candidate.
+Generate another.
+Do not present a copied idea as innovative.
+67. EDGE CASE — CANDIDATE TOO COMPLEX
+Example:
+requires:IoTblockchaincomputer visiondronemobile app
+Reject or simplify.
+The Innovation Agent should prefer a strong MVP over feature overload.
+68. EDGE CASE — AI IS UNNECESSARY
+If the candidate can be solved entirely with:
+CRUD+basic filtering
+do not pretend AI is required.
+Instead identify whether AI provides legitimate value.
+69. AI NECESSITY
+Candidate should explain:
+Why AI is actually useful.
+Examples:
+unstructured data understandingpredictionclassificationsemantic matchingreasoningpersonalizationautomation
+Not:
+"because it's an AI hackathon."
+70. HACKATHON FIT
+Evaluate:
+Can a working MVP be built?Can it be demonstrated?Can the team understand it?Can the value be shown quickly?
+71. SELECTED IDEA DETAIL
+The final idea should contain:
+{  name,  oneLineDescription,  detailedDescription,  targetUsers,  problemSolved,  keyFeatures,  workflow,  differentiators,  opportunityIds,  inspirationSources,  potentialRisks,  estimatedComplexity,  estimatedHackathonFit,  innovationScore,  impactScore,  differentiationScore,  overallConceptScore}
+72. DIFFERENTIATION SUMMARY
+Produce a clear summary:
+Existing solutions mostly:1. X2. Y3. ZOur concept differs by:1. A2. B3. C
+Every meaningful statement should link to research evidence where possible.
+73. INNOVATION OUTPUT EXAMPLE
+For:
+“Reduce food waste in college hostels.”
+The output may look like:
+{  "problemOpportunity": {    "coreProblem":      "Reduce avoidable food waste in college hostel dining operations.",    "targetUsers": [      "hostel students",      "canteen staff",      "hostel administrators"    ],    "desiredOutcomes": [      "better alignment between prepared food and demand",      "lower avoidable food waste"    ],    "criticalPainPoints": [      "uncertain meal demand",      "manual planning"    ],    "importantConstraints": [      "student-scale deployment",      "limited infrastructure"    ]  },  "solutionLandscape": {    "totalSolutions": 14,    "directSolutions": 9,    "adjacentSolutions": 5,    "dominantApproaches": [      "food waste tracking",      "demand prediction",      "analytics"    ],    "majorSolutionClusters": [      {        "id": "cluster_1",        "name": "Food Waste Tracking",        "description":          "Systems focused on measuring discarded food.",        "solutionIds": [          "sol_1",          "sol_4",          "sol_6"        ],        "commonFeatures": [          "waste tracking",          "analytics"        ],        "commonWorkflowElements": [          "record waste",          "analyze trends"        ],        "distinguishingCharacteristics": [          "different data collection methods"        ]      }    ],    "overallObservations": [      "Existing solutions frequently focus on commercial kitchens.",      "Tracking and analytics appear repeatedly."    ]  },  "featureLandscape": [    {      "featureId": "feature_1",      "canonicalName": "analytics",      "description": "Provides analytical views of collected data.",      "category": "analytics",      "occurrenceCount": 9,      "totalRelevantSolutions": 14,      "frequency": 0.64,      "solutionIds": [        "sol_1",        "sol_2"      ],      "frequencyClass": "common",      "variants": [        "analytics dashboard"      ],      "evidenceSourceIds": [        "src_1",        "src_4"      ]    }  ],  "identifiedGaps": [    {      "id": "gap_1",      "type": "context",      "title": "Campus-specific workflow",      "description":        "The researched direct solutions are primarily oriented toward commercial kitchens rather than college-hostel dining.",      "supportingSolutionIds": [        "sol_1",        "sol_4"      ],      "supportingSourceIds": [        "src_1",        "src_4"      ],      "impact": 8,      "confidence": 0.78    }  ],  "candidateIdeas": [    {      "id": "idea_1",      "name": "Adaptive Hostel Meal Planner",      "oneLineDescription":        "Predicts short-term hostel meal demand using student meal intent and historical consumption.",      "detailedDescription": "...",      "targetUsers": [        "students",        "hostel administrators"      ],      "problemSolved":        "Reduce food preparation mismatch in hostel dining.",      "keyFeatures": [        {          "name": "Meal intent collection",          "description":            "Collects lightweight student meal participation signals.",          "category": "core",          "sourceIds": []        },        {          "name": "Demand prediction",          "description":            "Predicts near-term meal demand.",          "category": "ai",          "sourceIds": []        }      ],      "workflow": [        {          "step": 1,          "action": "Collect meal intent",          "description":            "Students submit meal participation.",          "sourceIds": []        },        {          "step": 2,          "action": "Predict demand",          "description":            "The system estimates expected consumption.",          "sourceIds": []        },        {          "step": 3,          "action": "Recommend preparation",          "description":            "Administrators receive preparation guidance.",          "sourceIds": []        }      ],      "differentiators": [        {          "statement":            "Combines student meal intent with short-term demand prediction in a hostel-specific workflow.",          "differenceType": "combination",          "comparedToSolutionIds": [            "sol_1",            "sol_4"          ],          "evidenceSourceIds": [            "src_1",            "src_4"          ],          "strength": 8.6        }      ],      "opportunityIds": [        "gap_1"      ],      "inspirationSources": [        "sol_1",        "sol_4"      ],      "potentialRisks": [        "Low student participation could reduce prediction quality."      ],      "estimatedComplexity": "medium",      "estimatedHackathonFit": 8.8,      "innovationScore": 8.5,      "impactScore": 8.8,      "differentiationScore": 8.4,      "overallConceptScore": 8.6    }  ]}
+74. IMPORTANT NOTE ABOUT EXAMPLE VALUES
+The above is only an example of the output structure.
+Do NOT fabricate these values in actual execution.
+Actual results must be derived from the real ResearchResult.
+75. FINAL OUTPUT TO AGENT 4
+Agent 4 must receive enough information to answer:
+What does our project need to accomplish?What features must be implemented?What capabilities are needed?What roles are needed?How complex is the idea?What technical skills might be required?
+Therefore include:
+projectCapabilityRequirements
+inside the Innovation output.
+76. PROJECT CAPABILITY SCHEMA
+interface ProjectCapabilityRequirements {  requiredCapabilities: string[];  technicalCapabilities: string[];  domainCapabilities: string[];  likelyTeamRoles: string[];  complexityAreas: string[];  potentialSkillGaps: string[];  criticalDependencies: string[];}
+Example:
+requiredCapabilities:- demand prediction- student interaction- administrator dashboard- recommendation generationtechnicalCapabilities:- REST API- predictive model- data storage- authentication
+77. LANGGRAPH INTEGRATION
+Create:
+innovationNode(  state: HackathonState): Promise<Partial<HackathonState>>
+It should return:
+{  innovation: validatedInnovationResult}
+78. PERSISTENCE
+Persist:
+innovationResultsfeatureLandscapesinnovationGapscandidateIdeasselectedIdea
+Do not discard candidate ideas.
+They are useful for:
+transparency
+debugging
+comparison
+user selection
+future iterations
+79. USER OVERRIDE
+Allow the user to override the selected idea.
+Frontend should support:
+AcceptChoose another candidateModify idea
+If user manually chooses another candidate:
+state.innovation.selectedIdea
+must update.
+Do not force the model’s choice.
+80. HUMAN APPROVAL
+If desired, pause before final selection:
+Candidate ACandidate BCandidate C[Select A][Select B][Select C]
+Then resume LangGraph.
+This is especially useful because innovation is subjective.
+81. FINAL ACCEPTANCE CRITERIA
+Agent 3 is complete only when:
+It consumes Agent 2’s ResearchResult.
+It does not redo unnecessary research.
+It normalizes existing solutions.
+It analyzes concrete features.
+It calculates feature frequency programmatically.
+It analyzes feature combinations.
+It analyzes workflows.
+It identifies meaningful evidence-backed gaps.
+It distinguishes direct/adjacent/technical solutions.
+It generates 3–5 candidates.
+Every candidate is linked to one or more gaps/opportunities.
+Candidates are scored consistently.
+Candidate feasibility is considered.
+Candidate AI necessity is considered.
+The strongest candidate is selected.
+Closest existing solutions are identified.
+Overlap and difference are explicitly explained.
+Novelty is described as differentiation, never guaranteed uniqueness.
+Optional verification search is available for suspicious similarity.
+Structured output is Zod validated.
+Invalid output is retried.
+Historical candidates are preserved.
+Output is persisted.
+Frontend can display the feature landscape.
+Agent 4 can consume ProjectCapabilityRequirements.
+No fake facts are introduced.
+No unsupported novelty claims are introduced.
+82. FINAL ARCHITECTURE
+The complete Agent 3 flow should be:
+                    ResearchResult                         │                         ▼                NORMALIZE SOLUTIONS                         │                         ▼               BUILD SOLUTION LANDSCAPE                         │                         ▼                NORMALIZE FEATURES                         │                         ▼                FEATURE LANDSCAPE                         │                         ▼                FEATURE FREQUENCY                         │                         ▼              FEATURE COMBINATIONS                         │                         ▼                WORKFLOW ANALYSIS                         │                         ▼                  GAP ANALYSIS                         │                         ▼               OPPORTUNITY AREAS                         │                         ▼               GENERATE 3–5 IDEAS                         │                         ▼                SCORE CANDIDATES                         │                         ▼              CLOSEST-SOLUTION CHECK                         │                  suspicious?                 /          \               NO            YES                │              │                │        Verification Search                │              │                │              ▼                │        Re-evaluate                │              │                └──────┬───────┘                       ▼                SELECT BEST IDEA                       │                       ▼              DIFFERENTIATION REPORT                       │                       ▼          PROJECT CAPABILITY REQUIREMENTS                       │                       ▼                  Agent 4
+83. THE CORE DESIGN PRINCIPLE
+Agent 3 should never behave like:
+Problem ↓LLM ↓"Here's a cool idea."
+It must behave like:
+Problem ↓Existing Solutions ↓Existing Features ↓Existing Workflows ↓Feature Frequency ↓Solution Overlap ↓Gap ↓Opportunity ↓Candidate ↓Compare Candidate Against Existing Solutions ↓Differentiation ↓Best Idea
+The final idea must answer:
+“Why is this meaningfully different from what the Researcher found?”
+That explanation is as important as the idea itself.

@@ -1,0 +1,114 @@
+# Implementation Plan: Agent 4 — Team Architect
+
+## Overview
+Agent 4 (**Team Architect**) synthesizes the selected project proposal (`selectedIdea` & `projectCapabilityRequirements` from Agent 3) alongside the team member resumes (stored in state as raw strings) to analyze team skills, allocate optimal roles, design component responsibilities, and map workload distribution for hackathon execution.
+
+---
+
+## 📥 Resume Integration Flow (State & Agent 1 Input)
+
+### 1. Raw Resumes Input ([StrategistInput](file:///d:/snist%20hackathon/src/graph/state.ts#36-37) Schema)
+The raw resumes of all candidate team members will be provided at project creation alongside the problem statement:
+- **[StrategistInput](file:///d:/snist%20hackathon/src/graph/state.ts#36-37) updated**: Includes `resumes?: string[]` (array of raw text resumes).
+- **State propagation ([HackathonState](file:///d:/snist%20hackathon/src/graph/state.ts#523-524))**: `state.input.resumes` preserves the raw resume strings across all graph nodes so Agent 4 can parse and evaluate team skills.
+
+```typescript
+export const StrategistInputSchema = z.object({
+  problemStatement: z.string().min(10),
+  resumes: z.array(z.string()).optional().default([]), // Raw resume text array
+  hackathon: z.object({ ... }).optional(),
+  userConstraints: z.array(z.string()).optional(),
+  teamSize: z.number().positive().optional(),
+});
+```
+
+---
+
+## Technical Stack & Architecture (Agent 4)
+
+- **LLM Engine**: Gemini API (`gemini-flash-lite-latest`) via `@langchain/google-genai`.
+- **Zod Schemas**: Strict Zod models using `.optional()` for non-required fields (Gemini Proto schema compliant).
+- **Persistence**: MongoDB Atlas `TeamAnalysisResult` collection.
+- **Input Dependencies**:
+  - `state.innovation.selectedIdea`: The user-selected hackathon project idea.
+  - `state.innovation.projectCapabilityRequirements`: Capability & tech requirements from Agent 3.
+  - `state.input.resumes`: Raw resume strings for all team members.
+
+---
+
+## 🚀 Execution Pipeline
+
+```
+1. READ INPUTS
+   │ (selectedIdea + projectCapabilityRequirements from Agent 3)
+   │ (team resumes array from state.input.resumes)
+   ▼
+2. RESUME SKILL EXTRACTION & TEAM PROFILING
+   │ (LLM extracts domain skills, primary tech stack, experience level per resume)
+   ▼
+3. ROLE & COMPONENT ASSIGNMENT
+   │ (Maps team members to roles: Frontend/UI, Backend/API, AI/ML, Integration)
+   │ (Assigns specific feature & capability ownership based on skills & bandwidth)
+   ▼
+4. WORKLOAD & RISK MITIGATION ANALYSIS
+   │ (Identifies skill gaps, single-points-of-failure, and mitigation steps)
+   ▼
+5. OUTPUT TEAM ANALYSIS RESULT (`TeamAnalysisResult`)
+   │ (Persists team breakdown and passes state to Agent 5 — Architecture Agent)
+```
+
+---
+
+## Data Models ([src/graph/state.ts](file:///d:/snist%20hackathon/src/graph/state.ts))
+
+1. **`TeamMemberProfileSchema`**:
+   - `memberId`: string (e.g. `"member_1"`)
+   - `name`: string
+   - `parsedSkills`: string[]
+   - `primaryRole`: string (e.g. `"Fullstack Engineer"`, `"ML Engineer"`)
+   - `proficiencyLevels`: Record<string, "beginner" | "intermediate" | "expert">
+   - `resumeSnippet`: string
+
+2. **`RoleAssignmentSchema`**:
+   - `roleTitle`: string
+   - `assignedMemberId`: string
+   - `assignedMemberName`: string
+   - `assignedCapabilities`: string[]
+   - `assignedComponents`: string[]
+   - `workloadPercentage`: number
+
+3. **`TeamSkillGapSchema`**:
+   - `missingCapability`: string
+   - `riskLevel`: "low" | "medium" | "high"
+   - `mitigationStrategy`: string
+
+4. **`TeamAnalysisSchema`**:
+   - `teamMembers`: TeamMemberProfile[]
+   - `roleAssignments`: RoleAssignment[]
+   - `skillGaps`: TeamSkillGap[]
+   - `teamFeasibilityScore`: number (0-10)
+   - `overallTeamStrategy`: string
+
+---
+
+## File Structure
+
+```
+src/
+├── agents/
+│   └── team/
+│       ├── team.agent.ts            # Main entry: runTeamArchitect()
+│       ├── resumeParser.ts          # LLM skill extraction node from raw resume strings
+│       └── roleMatcher.ts           # Capability-to-role matching logic
+├── prompts/
+│   ├── resumeExtractor.ts          # System prompt for resume parsing
+│   └── roleAssignment.ts           # System prompt for role matching & gap detection
+└── models/
+    └── TeamAnalysis.model.ts        # Mongoose database model
+```
+
+---
+
+## User Review Requested
+- **Resume Integration**: Raw string resume array (`resumes?: string[]`) added to [StrategistInput](file:///d:/snist%20hackathon/src/graph/state.ts#36-37) and preserved in graph state `state.input.resumes`.
+- **Model Choice**: Gemini API (`gemini-flash-lite-latest`) used for skill parsing & role mapping.

@@ -1,0 +1,716 @@
+For the first 3 agents only—Strategist, Researcher, and Innovation—you can keep the toolset surprisingly small.
+The important distinction is:
+Not every agent needs tools.Strategist mostly reasons. Researcher performs external information gathering. Innovation mostly analyzes the Researcher's structured data.
+Tool inventory
+Tool
+Used by
+Purpose
+gemini_web_search
+Researcher
+Search the live web using Gemini + Google Search grounding
+tavily_web_search
+Researcher
+Independent web search for the same queries
+tavily_extract
+Researcher
+Extract deeper content from important discovered URLs
+github_search_repositories
+Researcher
+Find existing GitHub/open-source implementations
+github_get_repository
+Researcher
+Get detailed repository metadata
+github_get_readme
+Researcher
+Understand what a repository actually does
+github_get_contents
+Researcher
+Inspect important files/docs when README isn't enough
+semantic_similarity
+Innovation
+Compare solutions/features semantically
+embed_text
+Innovation
+Generate embeddings for solutions/features before similarity
+vector_search
+Innovation
+Find the most similar existing solutions/features
+feature_normalizer
+Innovation
+Normalize different descriptions of the same capability
+feature_counter
+Innovation
+Count feature frequency across solutions
+solution_deduplicator
+Researcher / Innovation
+Detect duplicate sources/solutions
+source_normalizer
+Researcher
+Normalize URLs/source metadata
+evidence_merger
+Researcher
+Merge information from multiple sources into one solution
+research_coverage_checker
+Researcher
+Decide whether enough research has been performed
+novelty_verification_search
+Innovation
+Optional extra Gemini + Tavily search when a candidate looks too similar
+However, some of these should not actually be LangChain tools. Several are better implemented as ordinary deterministic TypeScript functions.
+1. Agent 1 — Strategist
+Tools needed: essentially none
+I recommend keeping Agent 1 tool-free.
+Problem Statement
+       ↓
+Gemini/Groq
+       ↓
+ProblemAnalysis
+The Strategist is doing:
+problem decomposition
+user identification
+pain-point identification
+constraint extraction
+terminology generation
+research-question generation
+These are reasoning tasks.
+You don't need:
+web search
+GitHub
+vector DB
+at this stage.
+Only optional utility
+You can expose a hackathon_rules_parser if the hackathon rules are uploaded as a PDF/document, but even this can simply be a normal backend service rather than an agent tool.
+So for Agent 1:
+LLM
++
+Zod validation
+is enough.
+2. Agent 2 — Researcher
+This is where the majority of tools live.
+The Researcher has two loops:
+DISCOVERY
+    ↓
+ENRICHMENT
+A. gemini_web_search
+Purpose
+Search the internet through Gemini's Google Search grounding.
+Use it for:
+products
+startups
+commercial solutions
+hackathon projects
+blogs
+articles
+research projects
+general web discovery
+Example:
+"AI food waste management platform"
+The tool should return:
+{
+  query,
+  results: [
+    {
+      title,
+      url,
+      snippet,
+      content?,
+      citations?
+    }
+  ]
+}
+Why you need it
+This gives you broad Google-backed discovery.
+B. tavily_web_search
+Purpose
+Run the same logical query independently through Tavily.
+Your architecture is:
+Logical Query
+    │
+    ├── Gemini Search
+    │
+    └── Tavily Search
+             ↓
+         Merge Results
+Example:
+Query:
+"AI food waste startup"
+Run:
+Gemini → results
+Tavily → results
+Then merge them.
+Why two search providers?
+Because they may discover different pages.
+You want:
+better recall
++
+more diverse sources
++
+less dependence on one provider
+C. tavily_extract
+Purpose
+Sometimes search results only give you a snippet.
+For an important candidate:
+Search
+ ↓
+Candidate URL
+ ↓
+Tavily Extract
+ ↓
+Full useful page content
+Use it primarily during enrichment, not discovery.
+Example:
+FoodWise website
+Search found:
+AI-powered food waste platform...
+But you want:
+features
+workflow
+target users
+implementation details
+So:
+tavily_extract(url)
+can retrieve deeper page content where available.
+D. github_search_repositories
+Purpose
+Search GitHub directly.
+Examples:
+food waste AI
+food waste prediction
+meal demand prediction
+Output:
+{
+  owner,
+  name,
+  fullName,
+  url,
+  description,
+  stars,
+  forks,
+  topics,
+  language
+}
+Why separate from web search?
+Because GitHub API gives structured repository information and lets you perform repository-specific operations.
+E. github_get_repository
+Purpose
+After finding an interesting repository, retrieve complete metadata.
+Use it during enrichment.
+For example:
+github_search_repositories()
+        ↓
+repo found
+        ↓
+github_get_repository()
+Useful information:
+repository description
+languages
+topics
+stars
+forks
+dates
+default branch
+license where available
+F. github_get_readme
+Purpose
+Understand what the repository actually does.
+This is particularly important for:
+problem
+features
+workflow
+technology
+usage
+Example:
+GitHub repository
+ ↓
+README
+ ↓
+LLM extraction
+The README is usually far more useful for understanding the solution than raw repository metadata.
+G. github_get_contents
+Purpose
+Inspect important files when README isn't sufficient.
+You don't need to read the entire repository.
+Prioritize:
+package.json
+requirements.txt
+pyproject.toml
+docs/
+README
+src/
+architecture docs
+Example:
+README says:
+"Uses AI."
+You need to know:
+What technology?
+↓
+github_get_contents(package.json)
+Then you can identify:
+LangChain
+TensorFlow
+FastAPI
+React
+etc.
+H. source_normalizer
+This should not be an LLM tool.
+Make it a normal TypeScript function:
+normalizeSource(source)
+Purpose
+Normalize:
+URLs
+domains
+titles
+tracking parameters
+Example:
+https://example.com/page?utm_source=x
+https://www.example.com/page
+Potentially become the same canonical source.
+I. solution_deduplicator
+Also preferably deterministic code rather than an LLM tool.
+Purpose
+Identify:
+same URL
+same product
+same repository
+same company
+same solution
+Example:
+FoodWise website
+FoodWise Product Hunt
+FoodWise blog
+FoodWise GitHub
+→ one solution entity.
+Use a combination of:
+exact matching
++
+domain matching
++
+name matching
++
+semantic similarity
+J. evidence_merger
+This is a service/function that combines partial information.
+Example:
+Website
+→ problem + users
+Blog
+→ workflow
+GitHub
+→ technology
+into:
+DiscoveredSolution
+Use:
+mergeSolutionEvidence(existing, newEvidence)
+This is one of the most important utilities in your system.
+K. research_coverage_checker
+This should mostly be deterministic logic, potentially with LLM assistance.
+Purpose
+Determine:
+Have we searched enough?
+Track:
+commercial
+startups
+GitHub
+open source
+hackathons
+research
+technical approaches
+Example:
+Commercial        ✅
+GitHub            ✅
+Hackathons        ✅
+Startups          ✅
+Research          ✅
+Then also track:
+Round 1 → 15 new candidates
+Round 2 → 7
+Round 3 → 1
+This gives your Discovery loop a stopping signal.
+L. research_query_generator
+This is technically an LLM node rather than a conventional tool.
+Purpose
+Generate:
+direct queries
+alternative terminology
+user queries
+technical queries
+startup queries
+GitHub queries
+hackathon queries
+research queries
+Example:
+Problem:
+food waste in hostels
+Output:
+AI food waste management
+food demand prediction cafeteria
+college food waste platform
+food waste startup
+food waste GitHub
+food waste hackathon
+Keep this as an internal Researcher node.
+M. candidate_classifier
+Also better as an LLM node.
+Purpose
+Classify discovered references:
+direct
+adjacent
+technical
+irrelevant
+Example:
+restaurant food waste AI
+→ adjacent
+college hostel food waste platform
+→ direct
+N. candidate_ranker
+Prefer deterministic scoring.
+Example:
+candidateScore =
+  relevance
+  + directness
+  + authority
+  + evidenceAvailability
+Then:
+40 candidates
+   ↓
+top 12
+for enrichment.
+3. Researcher tool architecture
+The Researcher therefore looks like:
+                         RESEARCHER
+                             │
+                    ┌────────┴────────┐
+                    │                 │
+               DISCOVERY          ENRICHMENT
+                    │                 │
+             Query Generator   Missing Field Detector
+                    │                 │
+          ┌─────────┴─────────┐       │
+          ▼                   ▼       │
+      Gemini Search       Tavily      │
+          │               Search      │
+          └─────────┬─────────┘       │
+                    ▼                 │
+              Merge Sources           │
+                    │                 │
+              Normalize               │
+                    │                 │
+              Deduplicate             │
+                    │                 │
+               Classify               │
+                    │                 │
+                Rank                  │
+                    │                 │
+              Candidates ─────────────┘
+                                     │
+                         ┌───────────┴────────────┐
+                         ▼                        ▼
+                  Gemini Search             Tavily Search
+                         │                        │
+                         └───────────┬────────────┘
+                                     │
+                               GitHub API
+                                     │
+                                     ▼
+                             Evidence Merge
+                                     │
+                                     ▼
+                           DiscoveredSolution
+4. Agent 3 — Innovation
+Agent 3 needs far fewer external tools because it is primarily a reasoning and analysis agent.
+Its inputs are already:
+ProblemAnalysis
++
+ResearchResult
+A. embed_text
+Purpose
+Generate vector representations for:
+solutions
+features
+workflows
+candidate ideas
+Example:
+"Forecast cafeteria meal demand"
+and:
+"Predict upcoming food consumption"
+can be recognized as semantically similar.
+You need embeddings for semantic comparison.
+B. vector_search
+Purpose
+Find similar existing:
+solutions
+features
+workflows
+Example:
+Candidate idea
+      ↓
+embedding
+      ↓
+vector search
+      ↓
+top 5 similar existing solutions
+This is especially useful for detecting accidental similarity.
+C. semantic_similarity
+You can implement this as:
+cosine similarity
+using the embeddings.
+This should be deterministic.
+Use it for:
+solution similarity
+feature similarity
+workflow similarity
+candidate similarity
+D. feature_normalizer
+This can be a hybrid:
+LLM
++
+deterministic matching
+Example:
+"real-time alerts"
+"instant notifications"
+"threshold notifications"
+→
+Alerts
+But preserve variants.
+This is essential because otherwise feature frequency calculations become inaccurate.
+E. feature_counter
+Absolutely make this deterministic.
+Given:
+Solution A:
+analytics, alerts, tracking
+Solution B:
+analytics, prediction
+Solution C:
+analytics, alerts
+return:
+analytics → 3
+alerts → 2
+tracking → 1
+prediction → 1
+Do not waste LLM calls doing arithmetic.
+F. solution_clusterer
+Can use:
+embeddings
++
+similarity
++
+LLM naming
+Example:
+Solution embeddings
+       ↓
+clusters
+       ↓
+Cluster 1:
+Demand Forecasting
+Cluster 2:
+Waste Tracking
+Cluster 3:
+Redistribution
+The clustering algorithm can be deterministic; the LLM can explain/name clusters.
+G. novelty_verification_search
+This is an optional research tool for Innovation.
+Normally:
+Innovation
+→ ResearchResult
+→ analysis
+But if the generated idea is suspiciously close to existing solutions:
+candidate
+ ↓
+high similarity
+ ↓
+verification required
+ ↓
+Gemini + Tavily search
+ ↓
+new evidence
+ ↓
+re-evaluate
+This is valuable because your Innovation Agent should not confidently select a concept that is obviously already implemented.
+5. Innovation architecture
+                    ResearchResult
+                         │
+                         ▼
+                Normalize Solutions
+                         │
+                         ▼
+                 Normalize Features
+                         │
+                         ▼
+                  Feature Counter
+                         │
+                         ▼
+                 Feature Landscape
+                         │
+            ┌────────────┴────────────┐
+            ▼                         ▼
+      Workflow Analysis        Solution Similarity
+            │                         │
+            └────────────┬────────────┘
+                         ▼
+                    Gap Analysis
+                         │
+                         ▼
+                  Opportunity Areas
+                         │
+                         ▼
+                Generate Candidates
+                         │
+                         ▼
+                  Score Candidates
+                         │
+                         ▼
+              Similarity Verification
+                         │
+                    suspicious?
+                    /         \
+                  yes          no
+                  │             │
+         Gemini + Tavily        │
+            verify             │
+                  │             │
+                  └──────┬──────┘
+                         ▼
+                    Select Idea
+6. Tools by agent — final list
+Here is the clean list I would actually implement.
+Agent 1 — Strategist
+Actual tools
+None.
+Supporting services
+Zod validation
+optional PDF/document parser
+Agent 2 — Researcher
+LLM/tool calls
+1. gemini_web_search
+2. tavily_web_search
+3. tavily_extract
+4. github_search_repositories
+5. github_get_repository
+6. github_get_readme
+7. github_get_contents
+Internal deterministic services
+8. source_normalizer
+9. source_deduplicator
+10. candidate_ranker
+11. evidence_merger
+12. research_coverage_checker
+13. cache_service
+14. rate_limit_service
+Internal LLM nodes
+15. query_generator
+16. candidate_classifier
+17. field_extractor
+18. missing_field_detector
+19. enrichment_query_generator
+20. contradiction_detector
+Agent 3 — Innovation
+Internal tools/services
+21. embed_text
+22. vector_search
+23. semantic_similarity
+24. feature_normalizer
+25. feature_counter
+26. solution_clusterer
+27. workflow_comparator
+28. feature_combination_analyzer
+29. novelty_verification_search
+Some of these should be functions rather than LangChain tools.
+7. Which ones should ACTUALLY be LangChain tools?
+This distinction is important.
+Do not turn every function into a LangChain tool.
+Genuine external-action tools
+Make these LangChain tools:
+gemini_web_search
+tavily_web_search
+tavily_extract
+github_search_repositories
+github_get_repository
+github_get_readme
+github_get_contents
+Potentially:
+novelty_verification_search
+if exposed directly to the Innovation LLM.
+Normal TypeScript services/functions
+Keep these outside the LLM tool-calling interface:
+source_normalizer
+deduplicator
+ranker
+feature_counter
+similarity_calculator
+evidence_merger
+coverage_checker
+cache_service
+This is cleaner and safer.
+8. The real minimal toolset
+If you want to keep the first implementation very minimal, you can actually begin with only:
+GEMINI
+├── gemini_web_search
+TAVILY
+├── tavily_web_search
+└── tavily_extract
+GITHUB
+├── github_search_repositories
+├── github_get_repository
+└── github_get_readme
+Then implement everything else as normal backend functions.
+That is my preferred first version.
+9. External APIs/packages you'll need for these 3 agents
+AI
+Gemini API
+Groq API
+Agent 1 and 3 can use Groq according to your model-routing plan.
+Web research
+Gemini Google Search grounding
+Tavily Search API
+Tavily Extract API
+GitHub
+GitHub REST API
+Octokit
+Validation
+Zod
+Database
+MongoDB / Mongoose
+Embeddings/vector search
+Initially you can keep this lightweight.
+If you choose MongoDB Atlas Vector Search:
+MongoDB
+→ vector storage/search
+so you don't need another dedicated vector database.
+10. The most important thing for your architecture
+Don't think:
+26 tools = 26 agents
+Think:
+3 Agents
+      │
+      ├── 7 actual external tools
+      │
+      └── many deterministic internal functions
+So your architecture stays clean:
+                 HACKFORGE
+                     │
+       ┌─────────────┼─────────────┐
+       ▼             ▼             ▼
+  STRATEGIST     RESEARCHER    INNOVATION
+       │             │             │
+       │       ┌─────┴──────┐      │
+       │       ▼            ▼      │
+       │    GEMINI       TAVILY    │
+       │       │            │      │
+       │       └─────┬──────┘      │
+       │             ▼             │
+       │         GITHUB            │
+       │             │             │
+       │             ▼             │
+       │       ResearchResult      │
+       │             │             │
+       └─────────────┼─────────────┘
+                     ▼
+               INNOVATION
+                     │
+            embeddings/similarity
+                     │
+                     ▼
+                  Idea
+The key principle for the later prompts
+Tools should represent capabilities the LLM cannot directly perform. Functions should handle deterministic processing. Agents should handle reasoning and decisions.
+That separation will keep your implementation much simpler, cheaper, and more reliable.
