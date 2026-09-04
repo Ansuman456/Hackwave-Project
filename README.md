@@ -1,4 +1,4 @@
-# HackForge / HackBuddy
+# HackBuddy
 
 **AI Hackathon Intelligence & Project Generation Platform**
 
