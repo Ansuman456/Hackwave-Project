@@ -139,7 +139,6 @@ The **LangGraph state graph** (`backend/src/graph/hackforgeGraph.ts`) is the hea
 | **Google Gemini** (`gemini-3.6-flash`) | Research agent LLM + **live web search grounding** | `agents/researcher`, `tools/gemini/geminiWebSearch.tool.ts` |
 | **DeepSeek** (`deepseek-chat`) | Strategist, Innovation, Team Architect, and CTO LLMs (via OpenAI-compatible API) | `utils/llmFactory.ts` → all non-research agents |
 | **Featherless AI** (`deepseek-ai/DeepSeek-V4-Pro`) | Resume structuring before DB persistence | `services/resumeStructuringService.ts` |
-| **Groq** (`openai/gpt-oss-20b`) | Optional configured model (not wired by default) | `config/env.ts` |
 | **Tavily** | Web search + deep URL extraction | `tools/tavily/*`, `services/webResearchService.ts` |
 | **GitHub REST API** | Repo search, repo metadata, README, file contents (deep extraction) | `tools/github/githubTools.ts` |
 | **MongoDB** | Primary data store + search cache | `config/mongodb.ts`, all models |
