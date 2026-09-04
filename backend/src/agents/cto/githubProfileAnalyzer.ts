@@ -22,18 +22,23 @@ export interface GithubProfileData {
   skillsFromRepos: string[];
 }
 
-async function githubFetch(endpoint: string): Promise<any> {
+async function githubFetch(endpoint: string, useAuth = true): Promise<any> {
   const config = getConfig();
   const headers: Record<string, string> = {
     Accept: "application/vnd.github.v3+json",
   };
-  if (config.GITHUB_TOKEN) {
+  if (useAuth && config.GITHUB_TOKEN) {
     headers.Authorization = `Bearer ${config.GITHUB_TOKEN}`;
   }
 
   const response = await fetch(`https://api.github.com${endpoint}`, {
     headers,
   });
+
+  // Invalid/expired token -> retry unauthenticated (lower rate limit, but still works)
+  if (response.status === 401 && useAuth && config.GITHUB_TOKEN) {
+    return githubFetch(endpoint, false);
+  }
 
   if (!response.ok) {
     const errorText = await response.text();
