@@ -9,6 +9,16 @@ export interface IHackathonProject extends Document {
   userId: string;
   problemStatement: string;
   resumes?: string[];
+  structuredResumes?: Array<{
+    memberId: string;
+    name: string;
+    parsedSkills: string[];
+    primaryRole: string;
+    proficiencyLevels: Record<string, "beginner" | "intermediate" | "expert">;
+    resumeSnippet: string;
+    githubUsername?: string | null;
+    yearsExperience?: number | null;
+  }>;
   githubLinks?: Array<{ githubProfileUrl: string; username: string; role?: string }>;
   workflowState?: Record<string, unknown>;
   hackathon?: {
@@ -46,6 +56,21 @@ const HackathonProjectSchema = new Schema<IHackathonProject>(
     userId: { type: String, index: true },
     problemStatement: { type: String, required: true },
     resumes: { type: [String], default: [] },
+    structuredResumes: {
+      type: [
+        {
+          memberId: String,
+          name: String,
+          parsedSkills: [String],
+          primaryRole: String,
+          proficiencyLevels: { type: Schema.Types.Mixed, default: {} },
+          resumeSnippet: String,
+          githubUsername: { type: String, default: null },
+          yearsExperience: { type: Number, default: null },
+        },
+      ],
+      default: [],
+    },
     githubLinks: {
       type: [
         {

@@ -19,6 +19,9 @@ const envSchema = z.object({
   DEEPSEEK_API_KEY: z.string().default(""),
   DEEPSEEK_BASE_URL: z.string().default("https://api.deepseek.com/v1"),
   DEEPSEEK_MODEL: z.string().default("deepseek-chat"),
+  FEATHERLESS_API_KEY: z.string().default(""),
+  FEATHERLESS_BASE_URL: z.string().default("https://api.featherless.ai/v1"),
+  FEATHERLESS_MODEL: z.string().default("deepseek-ai/DeepSeek-V4-Pro"),
   VECTOR_DB_PROVIDER: z.string().optional().default("mongodb"),
   VECTOR_DB_URL: z.string().optional().default(""),
   VECTOR_DB_API_KEY: z.string().optional().default(""),
@@ -54,6 +57,8 @@ export function validateEnv(): void {
   console.log(`[ENV] GITHUB_TOKEN=${config.GITHUB_TOKEN ? "SET" : "NOT SET"}`);
   console.log(`[ENV] DEEPSEEK_API_KEY=${config.DEEPSEEK_API_KEY ? "SET" : "NOT SET"}`);
   console.log(`[ENV] DEEPSEEK_MODEL=${config.DEEPSEEK_MODEL}`);
+  console.log(`[ENV] FEATHERLESS_API_KEY=${config.FEATHERLESS_API_KEY ? "SET" : "NOT SET"}`);
+  console.log(`[ENV] FEATHERLESS_MODEL=${config.FEATHERLESS_MODEL}`);
   console.log(`[ENV] JWT_SECRET=${config.JWT_SECRET ? "SET" : "NOT SET"}`);
   console.log(`[ENV] EMAIL_USER=${config.EMAIL_USER ? "SET" : "NOT SET"}`);
 }

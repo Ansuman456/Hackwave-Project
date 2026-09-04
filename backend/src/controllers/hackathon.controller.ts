@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { v4 as uuidv4 } from "uuid";
 import { StrategistInputSchema, createInitialState, HackathonState } from "../graph/state";
 import { extractTextFromPdf } from "../utils/pdfParser";
+import { structureResumes } from "../services/resumeStructuringService";
 import { AuthRequest } from "../middleware/auth.middleware";
 import { HackathonProject } from "../models/HackathonProject.model";
 import { hackforgeGraph, resumeAfterCandidateSelection, resumeAfterTechStackSelection } from "../graph/hackforgeGraph";
@@ -83,11 +84,25 @@ export async function createHackathon(req: AuthRequest, res: Response): Promise<
 
     const projectId = uuidv4();
 
+    // Structure resumes via Featherless AI before persisting to DB.
+    let structuredResumes: unknown[] = [];
+    let resumeStructuringError: string | undefined;
+
+    if (resumes.length > 0) {
+      const structuring = await structureResumes(resumes);
+      if (structuring.success) {
+        structuredResumes = structuring.members ?? [];
+      } else {
+        resumeStructuringError = structuring.error;
+      }
+    }
+
     const project = await HackathonProject.create({
       projectId,
       userId,
       problemStatement: input.problemStatement,
       resumes: input.resumes || [],
+      structuredResumes,
       githubLinks: input.githubLinks || [],
       hackathon: input.hackathon,
       userConstraints: input.userConstraints,
@@ -101,6 +116,8 @@ export async function createHackathon(req: AuthRequest, res: Response): Promise<
         projectId: project.projectId,
         status: project.status,
         parsedResumeCount: resumes.length,
+        structuredResumeCount: structuredResumes.length,
+        resumeStructuringError: resumeStructuringError || null,
         createdAt: project.createdAt,
       },
     });
