@@ -18,6 +18,9 @@ const envSchema = z.object({
   VECTOR_DB_PROVIDER: z.string().optional().default("mongodb"),
   VECTOR_DB_URL: z.string().optional().default(""),
   VECTOR_DB_API_KEY: z.string().optional().default(""),
+  JWT_SECRET: z.string().default("hackwave-jwt-secret"),
+  EMAIL_USER: z.string().default(""),
+  EMAIL_PASS: z.string().default(""),
 });
 
 export type EnvConfig = z.infer<typeof envSchema>;
@@ -45,4 +48,6 @@ export function validateEnv(): void {
   console.log(`[ENV] GEMINI_API_KEY=${config.GEMINI_API_KEY ? "SET" : "NOT SET"}`);
   console.log(`[ENV] TAVILY_API_KEY=${config.TAVILY_API_KEY ? "SET" : "NOT SET"}`);
   console.log(`[ENV] GITHUB_TOKEN=${config.GITHUB_TOKEN ? "SET" : "NOT SET"}`);
+  console.log(`[ENV] JWT_SECRET=${config.JWT_SECRET ? "SET" : "NOT SET"}`);
+  console.log(`[ENV] EMAIL_USER=${config.EMAIL_USER ? "SET" : "NOT SET"}`);
 }
