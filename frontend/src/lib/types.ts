@@ -42,6 +42,32 @@ export type ProjectStatus =
   | "cancel_requested"
   | "awaiting_selection"
 
+export interface AuthUser {
+  _id?: string
+  id?: string
+  name: string
+  email: string
+}
+
+export interface ProjectStages {
+  strategist: boolean
+  researcher: boolean
+  innovation: boolean
+  team: boolean
+  architecture: boolean
+}
+
+export interface ProjectSummary {
+  projectId: string
+  problemStatement: string
+  status: ProjectStatus
+  teamSize?: number
+  hackathonName?: string
+  createdAt?: string
+  updatedAt?: string
+  stages?: ProjectStages
+}
+
 export interface ApiEnvelope<T> {
   success: boolean
   data?: T

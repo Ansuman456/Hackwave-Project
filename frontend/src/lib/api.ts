@@ -1,11 +1,13 @@
 import type {
   ApiEnvelope,
   ArchitectureResult,
+  AuthUser,
   GithubLink,
   HackathonDetails,
   InnovationResult,
   ProblemAnalysis,
   ProjectStatus,
+  ProjectSummary,
   ResearchResult,
   TeamAnalysis,
 } from "./types"
@@ -17,6 +19,7 @@ async function request<T>(
   options: RequestInit = {}
 ): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
+    credentials: "include",
     headers: {
       ...(options.body && !(options.body instanceof FormData)
         ? { "Content-Type": "application/json" }
@@ -43,6 +46,65 @@ async function request<T>(
   }
 
   return body?.data as T
+}
+
+// ---------------------------------------------------------------
+// Auth
+// ---------------------------------------------------------------
+interface AuthResponse {
+  success: boolean
+  message?: string
+  user?: AuthUser
+}
+
+async function authRequest(path: string, body?: Record<string, unknown>): Promise<AuthUser | null> {
+  const res = await fetch(`${BASE}${path}`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: body ? JSON.stringify(body) : undefined,
+  })
+
+  const data = (await res.json()) as AuthResponse
+  if (!res.ok) {
+    throw new Error(data.message || "Request failed")
+  }
+  return data.user ?? null
+}
+
+export function registerUser(
+  name: string,
+  email: string,
+  password: string
+): Promise<AuthUser | null> {
+  return authRequest("/auth/register", { name, email, password })
+}
+
+export function loginUser(
+  email: string,
+  password: string
+): Promise<AuthUser | null> {
+  return authRequest("/auth/login", { email, password })
+}
+
+export async function logoutUser(): Promise<void> {
+  await fetch(`${BASE}/auth/logout`, {
+    method: "POST",
+    credentials: "include",
+  })
+}
+
+export async function getCurrentUser(): Promise<AuthUser | null> {
+  const res = await fetch(`${BASE}/auth/me`, {
+    credentials: "include",
+  })
+  if (res.status === 401) return null
+  if (!res.ok) {
+    const data = (await res.json().catch(() => null)) as AuthResponse | null
+    throw new Error(data?.message || "Failed to fetch user")
+  }
+  const data = (await res.json()) as { success: boolean; user: AuthUser }
+  return data.user
 }
 
 // ---------------------------------------------------------------
@@ -105,6 +167,10 @@ export interface ProjectStatusData {
 
 export function getProjectStatus(id: string): Promise<ProjectStatusData> {
   return request<ProjectStatusData>(`/hackathons/${id}/status`)
+}
+
+export function listHackathons(): Promise<ProjectSummary[]> {
+  return request<ProjectSummary[]>("/hackathons")
 }
 
 export function startWorkflow(id: string): Promise<{ projectId: string; status: string }> {

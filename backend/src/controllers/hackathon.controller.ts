@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { v4 as uuidv4 } from "uuid";
 import { StrategistInputSchema, createInitialState, HackathonState } from "../graph/state";
 import { extractTextFromPdf } from "../utils/pdfParser";
+import { AuthRequest } from "../middleware/auth.middleware";
 import { HackathonProject } from "../models/HackathonProject.model";
 import { hackforgeGraph, resumeAfterCandidateSelection, resumeAfterTechStackSelection } from "../graph/hackforgeGraph";
 import { registerSSEConnection } from "../utils/sseStreamer";
@@ -19,8 +20,14 @@ function getProjectId(req: Request): string {
   return req.params.id as string;
 }
 
-export async function createHackathon(req: Request, res: Response): Promise<void> {
+export async function createHackathon(req: AuthRequest, res: Response): Promise<void> {
   try {
+    const userId = req.user?.id;
+    if (!userId) {
+      res.status(401).json({ success: false, error: "Unauthorized" });
+      return;
+    }
+
     const files = (req.files as Express.Multer.File[] | undefined) || [];
     const isMultipart = files.length > 0 || !!req.is("multipart/form-data");
 
@@ -78,6 +85,7 @@ export async function createHackathon(req: Request, res: Response): Promise<void
 
     const project = await HackathonProject.create({
       projectId,
+      userId,
       problemStatement: input.problemStatement,
       resumes: input.resumes || [],
       githubLinks: input.githubLinks || [],
@@ -125,6 +133,48 @@ function parseJsonField(value: unknown, fieldName: string): unknown {
     }
   }
   return value;
+}
+
+export async function listHackathons(req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      res.status(401).json({ success: false, error: "Unauthorized" });
+      return;
+    }
+
+    const projects = await HackathonProject.find({ userId })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    const data = projects.map((p) => ({
+      projectId: p.projectId,
+      problemStatement: p.problemStatement,
+      status: p.status,
+      teamSize: p.teamSize,
+      hackathonName: (p.hackathon as { name?: string } | undefined)?.name,
+      createdAt: p.createdAt,
+      updatedAt: p.updatedAt,
+      stages: computeStages(p),
+    }));
+
+    res.json({ success: true, data });
+  } catch (error) {
+    res.status(500).json({ success: false, error: "Internal server error" });
+  }
+}
+
+function computeStages(project: {
+  workflowState?: Record<string, unknown> | null;
+}): Record<string, boolean> {
+  const ws = project.workflowState || {};
+  return {
+    strategist: !!ws.problemAnalysis,
+    researcher: !!ws.research,
+    innovation: !!ws.innovation,
+    team: !!ws.teamAnalysis,
+    architecture: !!ws.architecture,
+  };
 }
 
 export async function getHackathonStatus(req: Request, res: Response): Promise<void> {

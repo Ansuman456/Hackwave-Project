@@ -1,33 +1,70 @@
-import { Link, NavLink, Outlet } from "react-router-dom"
-import { Sparkles } from "lucide-react"
+import { Link, NavLink, Outlet, useNavigate } from "react-router-dom"
+import { LogOut, Sparkles } from "lucide-react"
 
+import { Button } from "@/components/ui/button"
+import { useAuth } from "@/context/auth"
 import { cn } from "@/lib/utils"
 
 function SiteHeader() {
+  const { user, logout } = useAuth()
+  const navigate = useNavigate()
+
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     cn(
       "text-sm font-medium text-muted-foreground transition-colors hover:text-foreground",
       isActive && "text-foreground"
     )
 
+  async function handleLogout() {
+    await logout()
+    navigate("/")
+  }
+
   return (
     <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur">
       <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between px-6">
-        <Link to="/" className="flex items-center gap-2">
-          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <Sparkles className="h-4 w-4" />
-          </span>
-          <span className="text-sm font-semibold tracking-tight">HackBuddy</span>
-        </Link>
+        <div className="flex items-center gap-8">
+          <Link to="/" className="flex items-center gap-2">
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+              <Sparkles className="h-4 w-4" />
+            </span>
+            <span className="text-sm font-semibold tracking-tight">HackBuddy</span>
+          </Link>
 
-        <nav className="flex items-center gap-6">
-          <NavLink to="/" end className={linkClass}>
-            Home
-          </NavLink>
-          <NavLink to="/create" className={linkClass}>
-            New Project
-          </NavLink>
-        </nav>
+          <nav className="flex items-center gap-6">
+            <NavLink to="/" end className={linkClass}>
+              Home
+            </NavLink>
+            {user && (
+              <NavLink to="/dashboard" className={linkClass}>
+                Dashboard
+              </NavLink>
+            )}
+          </nav>
+        </div>
+
+        <div className="flex items-center gap-3">
+          {user ? (
+            <>
+              <span className="hidden text-sm text-muted-foreground sm:inline">
+                {user.name}
+              </span>
+              <Button variant="ghost" size="sm" onClick={handleLogout}>
+                <LogOut className="h-4 w-4" />
+                Logout
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button asChild variant="ghost" size="sm">
+                <Link to="/login">Sign in</Link>
+              </Button>
+              <Button asChild size="sm">
+                <Link to="/signup">Sign up</Link>
+              </Button>
+            </>
+          )}
+        </div>
       </div>
     </header>
   )

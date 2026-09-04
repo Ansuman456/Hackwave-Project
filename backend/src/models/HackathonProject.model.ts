@@ -6,6 +6,7 @@ type UsageMetrics = z.infer<typeof UsageMetricsSchema>;
 
 export interface IHackathonProject extends Document {
   projectId: string;
+  userId: string;
   problemStatement: string;
   resumes?: string[];
   githubLinks?: Array<{ githubProfileUrl: string; username: string; role?: string }>;
@@ -42,6 +43,7 @@ export interface IHackathonProject extends Document {
 const HackathonProjectSchema = new Schema<IHackathonProject>(
   {
     projectId: { type: String, required: true, unique: true },
+    userId: { type: String, index: true },
     problemStatement: { type: String, required: true },
     resumes: { type: [String], default: [] },
     githubLinks: {

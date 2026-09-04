@@ -3,6 +3,7 @@ import { ArrowRight, Bot, FileText, GitBranch, Layers, Target, Zap } from "lucid
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { useAuth } from "@/context/auth"
 
 const steps = [
   {
@@ -23,6 +24,9 @@ const steps = [
 ]
 
 export default function Home() {
+  const { user } = useAuth()
+  const ctaHref = user ? "/create" : "/signup"
+
   return (
     <div className="mx-auto w-full max-w-6xl px-6">
       <section className="flex flex-col items-center py-24 text-center sm:py-32">
@@ -40,7 +44,7 @@ export default function Home() {
         </p>
         <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row">
           <Button asChild size="lg">
-            <Link to="/create">
+            <Link to={ctaHref}>
               Start a project
               <ArrowRight className="h-4 w-4" />
             </Link>
@@ -93,7 +97,7 @@ export default function Home() {
               </p>
             </div>
             <Button asChild size="lg">
-              <Link to="/create">
+              <Link to={ctaHref}>
                 Get started
                 <ArrowRight className="h-4 w-4" />
               </Link>
