@@ -467,7 +467,6 @@ npm run dev            # Vite on http://localhost:5173 (proxies /api → 3000)
 | `FEATHERLESS_API_KEY` | — | Featherless key (resume structuring) |
 | `FEATHERLESS_BASE_URL` | `https://api.featherless.ai/v1` | Featherless API base |
 | `FEATHERLESS_MODEL` | `deepseek-ai/DeepSeek-V4-Pro` | Featherless model |
-| `GROQ_API_KEY` / `GROQ_MODEL` | — | Optional Groq model (configured, not wired by default) |
 | `TAVILY_API_KEY` | — | Tavily search/extract key |
 | `GITHUB_TOKEN` | — | GitHub API token (optional, raises rate limits) |
 | `VECTOR_DB_PROVIDER` | `mongodb` | Vector DB provider (for innovation clustering) |
